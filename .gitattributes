@@ -1,0 +1,2 @@
+src/restore_identity.h -text
+tests/restore_identity_fixtures.c -text
