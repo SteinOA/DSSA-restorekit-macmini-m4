@@ -13,7 +13,7 @@ Forsøk 6 stoppet før macOS-installasjonen kom videre. Feilen var ved vertens k
 
 HOVEDPROGRAM: bygd med exitkode 0. Lokal check-usb-test bestod 24. oktober kl. 05:33 (2,98 sekunder). Apples 27015-tjeneste var uendret, og vår 27016-port ble lukket. Kopi klar: Mac-mini-kveld/bin/restorekit.exe.
 HOVEDPROGRAM SHA256: B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278.
-SKY/CI: Ni uavhengige parserjobber BESTÅTT på Windows 2022 MSVC og Ubuntu 24.04 GCC/Clang, tre ulike frø per kompilator; 900 000 testtilfeller pluss regresjonsprøver. Linux brukte ASan/UBSan. Dette er kode-/minnetester, ikke fysisk USB/restore. Resultat: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40058880706 . Se Cloud-tests/RESULTS.md.
+SKY/CI: BESTÅTT på komplett snapshot eb971be5c11457e83cb29b132b1d260eb461dd52. Ni parserjobber på Windows/Linux: 900 000 tilfeller pluss regresjonsprøver (Linux ASan/UBSan). Tre separate Windows-skymaskiner kjørte også det faktiske B908-hovedprogrammet med check-usb: alle exit 0 og privat port ryddet. Sju skript syntakskontrollert i PowerShell 5.1 og 7 i alle tre jobber, totalt 42 kontroller. Ingen fysisk Mac-restore i skytestene. Se Cloud-tests/MAIN-PROGRAM-RESULTS.md. Program: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40059588962 . Parser: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40059589027 .
 
 MASKIN, KABEL OG IDENTITET
 - Mål: Mac mini M4, Mac16,10 / j773gap. SSD: 2 TB internt, tom.
@@ -70,3 +70,9 @@ TEKNISK TILLEGG – OPPRYDDINGSSCRIPTS ETTER FORSØK 6
 Forsøk 7-koordinatorens kildekode har nå en avgrenset oppryddingsvei for akkurat den observerte restpakken etter at sertifikater og nøkkel allerede er borte. Den eksakte frakoblede 1905-oppføringen kan ryddes hvis den finnes; hvis den allerede er borte, hoppes enhetsfjerningen over. Etter én enhetsfjerning tillates inntil ti sekunder med kun lesing for at PnP-visningen skal oppdatere seg. Ingen gjentatte fjerninger eller tvangsfjerning. Andre feil stopper med behov for gjennomgang.
 
 PowerShell 5 og 7 syntakskontroll er bestått, og begge leste dagens allerede ryddede tilstand i standard inspeksjonsmodus. Kontroll viser ingen enhetsoppføring, ingen restpakke, ingen sertifikater og ingen privat nøkkel. De nye operative oppryddingsgrenene er ikke kjørt mot maskinvare eller driverlager. En manglende blank i Where-Object-uttrykket ble funnet og rettet under inspeksjon; den kan forklare det gamle avbruddet etter enhetsfjerning, men den opprinnelige feilmeldingen var ikke fanget, så årsaken til akkurat det avbruddet er ikke bevist. Se Mac1905-driver/cleanup-source-review.json og phantom-helper-inspect-after-cleanup.json.
+
+
+ARKIV OG START SENERE
+Privatrepo: https://github.com/SteinOA/DSSA-restorekit-macmini-m4 . Full kilde med vendor-moduler (2 133 filer), lisenser, patcher, skript, offentlige driverfiler, testresultater og B908-programmet er lagret. archives/source-snapshot.zip bevarer kildefilene byte for byte; kontrollsummer ligger ved. Firmware og lokal sertifikattillit/nøkler holdes utenfor.
+Når brukeren kommer tilbake: les dette notatet og skriv kort hvilken fersk DFU-/driverkontroll som gjenstår. Bruk det ferdige programmet og eksisterende IPSW, ikke bygg eller last ned på nytt uten ny grunn. Endelig PC-kontroll: Mac-mini-kveld/sluttstatus.json (ingen sertifikat/nøkkel/1905-pakke/egen restore/27016), Defender sanntids- og manipuleringsbeskyttelse begge på. Selve macOS-installasjonen gjenstår.
+

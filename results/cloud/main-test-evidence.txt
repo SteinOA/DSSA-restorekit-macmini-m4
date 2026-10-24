@@ -1,0 +1,39 @@
+main-smoke (3)	Parse ops scripts in Windows PowerShell 5.1 without executing	2026-10-24T03:45:28.7129432Z ^[[36;1mWrite-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')^[[0m
+main-smoke (3)	Parse ops scripts in Windows PowerShell 5.1 without executing	2026-10-24T03:45:33.1021833Z AST syntax PASS version=5.1.20348.5622 files=7; no ops script executed
+main-smoke (3)	Parse ops scripts in PowerShell 7 without executing	2026-10-24T03:45:33.1739957Z ^[[36;1mWrite-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')^[[0m
+main-smoke (3)	Parse ops scripts in PowerShell 7 without executing	2026-10-24T03:45:33.4852291Z AST syntax PASS version=7.6.6 files=7; no ops script executed
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0921184Z Own no-device child PID=8 replica=3
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0925211Z   "SHA256": "B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278",
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0925565Z   "ExitCode": 0,
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0925733Z   "Seconds": 0.36,
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0925911Z   "NoAppleDevicePresent": true,
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0926123Z   "Private27016Gone": true,
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0926338Z   "Apple27015Unchanged": true,
+main-smoke (3)	Actual built main private mux no-device check only	2026-10-24T03:45:35.0928716Z {"data_erased":false,"endpoint":"127.0.0.1:27016","event":"usb_check_passed","firmware_uploaded":false}
+main-smoke (3)	Save isolated cloud smoke results	2026-10-24T03:45:35.8773356Z SHA256 digest of uploaded artifact zip is 7cd08f113a782e87358f129c66b16ad5ec3c1a8547eeb19aa8987f8e8d87f8ec
+main-smoke (2)	Parse ops scripts in Windows PowerShell 5.1 without executing	2026-10-24T03:45:28.4852247Z ^[[36;1mWrite-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')^[[0m
+main-smoke (2)	Parse ops scripts in Windows PowerShell 5.1 without executing	2026-10-24T03:45:34.3071022Z AST syntax PASS version=5.1.20348.5756 files=7; no ops script executed
+main-smoke (2)	Parse ops scripts in PowerShell 7 without executing	2026-10-24T03:45:34.3789751Z ^[[36;1mWrite-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')^[[0m
+main-smoke (2)	Parse ops scripts in PowerShell 7 without executing	2026-10-24T03:45:34.7445551Z AST syntax PASS version=7.6.8 files=7; no ops script executed
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:35.7116343Z Own no-device child PID=6376 replica=2
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0165567Z   "SHA256": "B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278",
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0166077Z   "ExitCode": 0,
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0166349Z   "Seconds": 0.31,
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0166597Z   "NoAppleDevicePresent": true,
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0166875Z   "Private27016Gone": true,
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0167150Z   "Apple27015Unchanged": true,
+main-smoke (2)	Actual built main private mux no-device check only	2026-10-24T03:45:36.0192706Z {"data_erased":false,"endpoint":"127.0.0.1:27016","event":"usb_check_passed","firmware_uploaded":false}
+main-smoke (2)	Save isolated cloud smoke results	2026-10-24T03:45:36.6585504Z SHA256 digest of uploaded artifact zip is 092a86293d804c542b41b361aa711c2b136a8d7b737945053bb553c5a8877af5
+main-smoke (1)	Parse ops scripts in Windows PowerShell 5.1 without executing	2026-10-24T03:45:31.7350518Z ^[[36;1mWrite-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')^[[0m
+main-smoke (1)	Parse ops scripts in Windows PowerShell 5.1 without executing	2026-10-24T03:45:35.4644567Z AST syntax PASS version=5.1.20348.5622 files=7; no ops script executed
+main-smoke (1)	Parse ops scripts in PowerShell 7 without executing	2026-10-24T03:45:35.5464779Z ^[[36;1mWrite-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')^[[0m
+main-smoke (1)	Parse ops scripts in PowerShell 7 without executing	2026-10-24T03:45:36.1807451Z AST syntax PASS version=7.6.6 files=7; no ops script executed
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:37.8802813Z Own no-device child PID=6028 replica=1
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2364834Z   "SHA256": "B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278",
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2365710Z   "ExitCode": 0,
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2366179Z   "Seconds": 0.37,
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2366658Z   "NoAppleDevicePresent": true,
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2367216Z   "Private27016Gone": true,
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2367722Z   "Apple27015Unchanged": true,
+main-smoke (1)	Actual built main private mux no-device check only	2026-10-24T03:45:38.2424581Z {"data_erased":false,"endpoint":"127.0.0.1:27016","event":"usb_check_passed","firmware_uploaded":false}
+main-smoke (1)	Save isolated cloud smoke results	2026-10-24T03:45:39.3597055Z SHA256 digest of uploaded artifact zip is 560b38d41213eaf1eb5e8720fdd4de7cf02f8a86ad4a39ef8ef9eb5245a62442
