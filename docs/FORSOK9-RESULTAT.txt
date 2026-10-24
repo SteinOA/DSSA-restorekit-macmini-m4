@@ -1,9 +1,17 @@
-FORSØK9 LYKTES – 24.10.2026
-Restoreprogrammet meldte Status: Restore Finished / DONE og avsluttet med kode0 kl21:23:58 etter10min55sek. Alle133fullførte kontrollpunkter hadde resultat0.
-Brukeren sendte to fotografier av macOS-oppsettets Bluetooth-skjerm for tastatur og mus, og meldte lyd fra Mac-en. Dette bekrefter oppstart etter restoren. Tastatur/mus må kobles til for å fortsette vanlig førstegangsoppsett.
-ProgramSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
-macOS-bilde: UniversalMac_15.6.1_24G90_Restore.ipsw.
-Ingen automatiske restore-gjentakelser eller driverbytter under installasjonen. Privat27016stoppet etterpå. Apples27015beholdt samme eier/adresse.
+DSSA – Mac mini M4 gjenopprettet fra Windows
+24. oktober 2026
 
-PC-opprydding: Sertifikattilliten er fjernet fra alle gjennomsøkte lagre. Privat CNG-nøkkel finnes ikke. Driverpakken står midlertidig igjen fordi Mac-en etter normal oppstart meldte ny1905-serieidentitet. Oppryddingsvakten stoppet ved denne nye tilstedeværende enheten; ingen tilstedeværende enhet ble fjernet.
-Brukeren er bedt om å trekke USB mellom PC og Mac. Deretter er en avgrenset opprydding klargjort for bare de to nøyaktige frakoblede oppføringene som bruker den hashverifiserte pakken. Begge sikkerhetskopieres først. Sluttresultat skal føyes til før avslutning.
+Maskin: Mac mini M4 (2024), Mac16,10.
+Lagring: ny, tidligere tom 2 TB «SSD expansion module for Mac mini M4» fra Expand Mac mini, drevet av Fyde Innovations LTD. Produktnavn og kapasitet er bekreftet i kjøpsfakturaen. Nøyaktig NAND-produsent og delenummer er ikke dokumentert i fakturaen.
+System: macOS Sequoia 15.6.1, bygg 24G90, fra UniversalMac_15.6.1_24G90_Restore.ipsw.
+
+Resultat: full restore fra Windows fullført 24.10.2026 kl. 21:23:58. Varighet 10 minutter og 55 sekunder. Programmet avsluttet med kode 0 og Mac-en meldte «Restore Finished». Alle 133 fullførte kontrollpunkter hadde resultat 0. Brukeren har bekreftet oppstart og gjennomfører språk- og brukeroppsett.
+
+PC-opprydding er FERDIG og godkjent. Den midlertidige PID1905-driverpakken og de to nøyaktige frakoblede Mac-oppføringene er slettet etter sikkerhetskopiering. Ingen andre driverpakker ble fjernet. Apples tre kontrollerte drivere er uendret. Apples tjeneste på 127.0.0.1:27015 er beholdt; privat 27016 og restorehjelperen er stoppet.
+Sertifikatet 4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31 er borte fra LocalMachine/Root, LocalMachine/TrustedPublisher og øvrige kontrollerte lagre. CurrentUser/My-oppføringen og den opprinnelige private CNG-nøkkelen er borte. Sertifikatet manglet BasicConstraints-utvidelse; det hadde ikke et eksplisitt CA=false-felt. Ingen testsignering eller avslått signaturkontroll ble brukt. Antivirus, sanntidsbeskyttelse og manipuleringsbeskyttelse er på.
+
+Sluttlogg: outputs/Mac1905-driver/Final-attempt9-cleanup-20261024-213812/result.json
+Detaljert restorebevis: outputs/Mac1905-driver/FORSOK9-RESTORE-RESULTAT.json
+Program SHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
+
+Neste arbeid: behold arkivet privat, lag kort leverandørunderlag i Stein Aune/DSSA sitt navn og klargjør en ren, generell Mac mini M4-utgave. Den personlåste, fysisk testede B592-versjonen bevares som referanse. Ikke start en ny restore på den ferdige Mac-en. Ingen publisering eller sending til leverandøren er godkjent.

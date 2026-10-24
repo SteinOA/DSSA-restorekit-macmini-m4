@@ -1880,6 +1880,26 @@
     }
   ],
   "NormalBootUserConfirmed": true,
-  "PcCleanup": "Certificate and key gone; waiting for USB disconnection to remove exact post-boot1905 package binding",
-  "BootEvidence": "User supplied two photos of macOS Bluetooth Setup Assistant and reported hearing Mac audio"
+  "PcCleanup": "PASS: exact temporary package and two disconnected task nodes removed; all task certificate trust and private key absent; Apple drivers unchanged",
+  "BootEvidence": "User supplied two photos of macOS Bluetooth Setup Assistant and reported hearing Mac audio",
+  "CleanupResult": {
+    "Attempt": 9,
+    "Thumbprint": "4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31",
+    "DeleteExitCode": 0,
+    "RemovedOnlyNonPresentExactIds": [
+      "USB\\VID_05AC&PID_1905\\D6H2HCX7LK",
+      "USB\\VID_05AC&PID_1905\\00008132-001808291EA2401C"
+    ],
+    "RemainingRestoreKitPackages": [],
+    "UnexpectedDeletedPackages": [],
+    "ChangedAppleInf": [],
+    "RemainingCertificates": [],
+    "PrivateKeyStillExists": false,
+    "LocalMachineRootAbsent": true,
+    "LocalMachineTrustedPublisherAbsent": true,
+    "CurrentUserMyAbsent": true,
+    "NoForceUninstallSubtreeTrustOrSecurityChanges": true,
+    "Success": true
+  },
+  "UserConfirmedLanguageAndUserSetup": true
 }

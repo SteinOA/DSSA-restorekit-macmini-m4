@@ -1,84 +1,17 @@
-SISTE STATUS 24.10.2026 – FORSØK9 LYKTES, MAC-OPPSTART BEKREFTET
-macOS15.6.1/24G90 er gjenopprettet fra Windows til Mac mini M4 med nySSD. Nativeprogrammet B592 meldte Restore Finished / DONE og exit0 kl21:23:58, varighet10min55sek. Alle133fullførte kontrollpunkter hadde resultat0. Brukeren sendte to bilder av macOS-oppsettets tastatur-/mus-skjerm og meldte lyd fra Mac-en. Vanlig førstegangsoppsett trenger tilkoblet tastatur/mus; ingen ny restore skal startes.
-PC-opprydding: Den midlertidige sertifikattilliten og private CNG-nøkkelen er bekreftet borte. PID1905-driverpakken står igjen fordi Mac-en dukket opp med ny USB-serieidentitet etter oppstart. Sikkerhetsvakten stoppet før den tilstedeværende enheten ble endret. Brukeren er bedt om å trekke USB mellom PC og Mac; bekreftelsen mangler ennå.
-En avgrenset opprydding er klargjort i work/cleanup-after-attempt9.ps1, arkivert i repo/ops. Den må bare kjøres etter at fersk kontroll viser ingen tilstedeværende AppleUSB/KIS. Kun to eksakte frakoblede1905-oppføringer og den hash-/navnverifiserte pakken kan fjernes, med sikkerhetskopi og sluttkontroll. Ingen ny sertifikattillit, signering eller sikkerhetsendring. Sluttloggen skal fortsatt kontrolleres og lagres før oppdraget avsluttes helt.
-ProgramSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
-Se results/attempt9-restore-result.json og lokalt outputs/Mac1905-driver/FORSOK9-RESULTAT.txt. Ingen ny restore-godkjenning foreligger eller trengs for denne Mac-en.
+DSSA – Mac mini M4 gjenopprettet fra Windows
+24. oktober 2026
 
-ELDRE HISTORIKK FØLGER:
-SISTE STATUS 24.10.2026 KL21:06 – NATIV WINDOWS-PORTFEIL RETTET
-Gjenskapt uten Mac: Rust-proben nådde privat27016, men faktisk C-klient nådde den ikke fordi C getenv og Windows-prosessmiljø var ulike. Bare dette Windows-restorebyggets native C-koblinger er nå låst direkte til127.0.0.1:27016. Ny actual-C ListDevices-kontroll før firmware hindrer samme feil.
-Gjeldende programSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93. Den tidligere48C9-versjonen skal ikke brukes til neste forsøk.
-RED før rettelse, 3/3 lokale GREEN-tester etter rettelse, og 3/3 uavhengige Windows-skytester bestått: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40123670933 . Rettelsen, full kilde, eksakt arkiv og program er bevart i repoet. Se docs/NATIVE-PORT-RETTELSE.txt og results/native-endpoint-cloud.json.
-macOS er ikke installert. Det er ikke bevist at portfeilen alene forklarer RX-stoppet. Forsøk8 er avsluttet; sertifikattillit, privat nøkkel og1905-pakke er fjernet. Ingen ny import eller nytt fysisk forsøk er startet. Forsøk9-skripter og konkret forslag er klare, men ny godkjenning kreves etter brukerens tidligere avgrensning til ett forsøk av gangen. Se outputs/Mac1905-driver/FORSOK9-FORSLAG.txt lokalt eller docs/FORSOK9-FORSLAG.txt i repoet.
+Maskin: Mac mini M4 (2024), Mac16,10.
+Lagring: ny, tidligere tom 2 TB «SSD expansion module for Mac mini M4» fra Expand Mac mini, drevet av Fyde Innovations LTD. Produktnavn og kapasitet er bekreftet i kjøpsfakturaen. Nøyaktig NAND-produsent og delenummer er ikke dokumentert i fakturaen.
+System: macOS Sequoia 15.6.1, bygg 24G90, fra UniversalMac_15.6.1_24G90_Restore.ipsw.
 
-ELDRE HISTORIKK FØLGER:
-SISTE STATUS: Forsøk8 avsluttet med feil 24.10.2026. Serienummerlesingen er bekreftet løst på fysisk Mac. Nytt stoppunkt er USB-dataforbindelsen (RX stall) før macOS-installasjon. Opprydding bestod; ingen sertifikattillit, privat nøkkel eller1905-driverpakke står igjen. Ingen nytt fysisk forsøk er godkjent. Se FORSOK8-RESULTAT.txt i outputs/Mac1905-driver, eller results/ATTEMPT8-RESULT.txt i repoet.
+Resultat: full restore fra Windows fullført 24.10.2026 kl. 21:23:58. Varighet 10 minutter og 55 sekunder. Programmet avsluttet med kode 0 og Mac-en meldte «Restore Finished». Alle 133 fullførte kontrollpunkter hadde resultat 0. Brukeren har bekreftet oppstart og gjennomfører språk- og brukeroppsett.
 
-ELDRE HISTORIKK FØLGER:
+PC-opprydding er FERDIG og godkjent. Den midlertidige PID1905-driverpakken og de to nøyaktige frakoblede Mac-oppføringene er slettet etter sikkerhetskopiering. Ingen andre driverpakker ble fjernet. Apples tre kontrollerte drivere er uendret. Apples tjeneste på 127.0.0.1:27015 er beholdt; privat 27016 og restorehjelperen er stoppet.
+Sertifikatet 4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31 er borte fra LocalMachine/Root, LocalMachine/TrustedPublisher og øvrige kontrollerte lagre. CurrentUser/My-oppføringen og den opprinnelige private CNG-nøkkelen er borte. Sertifikatet manglet BasicConstraints-utvidelse; det hadde ikke et eksplisitt CA=false-felt. Ingen testsignering eller avslått signaturkontroll ble brukt. Antivirus, sanntidsbeskyttelse og manipuleringsbeskyttelse er på.
 
-CURRENT STATUS AFTER PHYSICAL ATTEMPT 7, EVENING 2026-10-24
-The previously archived B908 executable fails on this Mac's actual zero-padded USB serial descriptor. Do not use B908 for the next attempt. Actual descriptor was captured: 82 bytes, canonical 25-character authorized identity followed by 15 zero UTF16 units, successful transfer and LANGID0409. The new decoder accepts only a completely zero suffix after the exact authorized identity and rejects data after padding. A regression with the exact captured bytes fails against old code and passes after the fix.
-Current executable SHA256: 48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D. Build, exact-device fixture, 300k local varied cases and local no-device main service check pass. Cloud run40120482606:3/3 actual program checks pass;40120482702:9/9 parser jobs including captured-Mac fixture pass. Corrected source snapshot/binary/tests/results saved in this private repository. See results/cloud/ATTEMPT7-PADDING-RESULTS.txt and docs/FORTSETT-HER-I-KVELD.txt.
-Attempt7 ended before installation; only own native61132 was stopped. Its automatic cleanup succeeded, including exact phantom removal: certificates0/keyabsent/1905packagegone/nootherpackagesdeleted, final Cleanup-20261024-202134-0d72f250. Proposed next is exactly ONE attempt8 using local work/run-single-attempt8.ps1 and work/restore-apple-attempt8.ps1, with NEW48C9 hash and freshly verified Apple process hash, fresh DFU+same identity. User approval question for attempt8 is pending. Do not start it or reimport trust until answered. No new private key, broad driver, antivirus disable or automatic retry.
+Sluttlogg: outputs/Mac1905-driver/Final-attempt9-cleanup-20261024-213812/result.json
+Detaljert restorebevis: outputs/Mac1905-driver/FORSOK9-RESTORE-RESULTAT.json
+Program SHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
 
-OLDER HISTORY FOLLOWS; CURRENT STATUS ABOVE TAKES PRECEDENCE
-
-RestoreKit Mac mini M4 – private-repository handoff, 2026-10-24
-
-Purpose: restore a Mac mini M4 (Mac16,10 / j773gap) with a blank internal 2 TB SSD from Windows. macOS installation is NOT complete. Physical restoration is postponed until the user returns this evening. Preparation/private repository archival is authorized; a seventh restore attempt is not yet authorized. No scheduled action or reminder has been created.
-
-Upstream baseline: fcjr/restorekit v0.5.13, commit 3cf86558a2f721ff956c99eebc132a022291ddb5. Local modifications require preservation and review. Private repository created and verified: https://github.com/SteinOA/DSSA-restorekit-macmini-m4 . Nine parser CI jobs passed: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40058880706 (Windows MSVC and Linux GCC/Clang, 900,000 cases plus fixtures).
-
-Observed progress:
-- Native Apple drivers worked through Port DFU, KIS, iBSS, iBEC and Recovery.
-- Attempt 6 reached the final Apple Silicon restore USB PID1905 and its narrowly scoped WinUSB binding worked.
-- The attempt failed at the host identity gate before installation progressed. It is NOT established that the physical device's raw serial string was itself wrong.
-- Known identity-format/LANGID defects and an unnecessary USB configuration change have been corrected in reviewed source. Pure-data fixtures pass with no USB access. This does not establish a successful compiled-program/hardware restore.
-- Main build exit 0; SHA256 B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278. Local check-usb passed in 2.98s, no Mac present; private 27016 closed and Apple 27015 unchanged. Full Mac data transfer/restore still unverified. Nine cloud parser jobs passed; results/cloud documents the exact scope.
-
-Hardware identities required for target scoping:
-- Port DFU controller physical PID F014, controller ECID165715DA257CBD11.
-- SoC CPID8132, BDID2A, ECID001808291EA2401C.
-- Physical KIS PID1881 exposes logical DFU through Apple's RSM stack; do not require a physical PID1227.
-- Recovery PID1281; final restore PID1905, serial00008132-001808291EA2401C.
-- Recheck the agreed physical USB port before operation; never infer identity solely from bus address or an OEM INF number.
-
-Security/current cleanup state:
-- Attempt6 cleanup result Success=true: no1905 package, no task certificate in user/machine stores, no private signing key, no unexpected deleted driver package.
-- A disconnected exact1905 devnode had to be backed up and removed before ordinary package deletion could succeed. No force/uninstall/broad-device removal.
-- Protected Apple packages AppleUSB/AppleKIS/AppleRSM were retained.
-- Defender protection was reported on at the last check.
-- The existing Apple loopback service on27015 was retained; temporary27016 listener stopped. Recheck current state, do not stop unrelated processes.
-
-Proposed attempt7 requires fresh explicit approval for ONE attempt plus any temporary security changes. If still needed, reuse the existing public-only certificate embedded in the unchanged CAT (thumbprint4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31) in LocalMachine/Root and TrustedPublisher temporarily. Never recreate a private key or sign again. Stage only macmini_restore_1905.inf, sole USBVID05ACPID1905. No live automatic driver-rebinding watcher. Native Apple early transport plus a target-limited embedded mux on127.0.0.1:27016. Preserve Apple's27015 process.
-
-Prepare+restore+cleanup must be one reviewed orchestration with finally after the restore process ends, on success/failure/cancellation. Cleanup the exact package by original name+hash, not OEM number alone; remove a blocking phantom devnode only with exact identity/absence/backup checks. Always remove task certificate trust and confirm the old private key remains absent, even if package cleanup fails. Verify final process/listener/driver/security state before ending work. A crash/power loss cannot guarantee finally; inspect cleanup first when resuming.
-
-Relevant local task files (repository mapping to be finalized):
-work/run-single-attempt7.ps1
-work/restore-apple-attempt7.ps1
-work/prepare-mac1905-temporary.ps1
-work/cleanup-mac1905-temporary.ps1
-work/mac1905-temporary-common.ps1
-work/remove-exact-phantom-mac1905.ps1
-work/restore-identity-fixtures-result.json
-outputs/Mac1905-driver/LES-MEG.md
-outputs/Mac1905-driver/FORSOK7-FORSLAG.md
-outputs/Mac1905-driver/Cleanup-20261024-052841-cc1b4156/result.json
-
-Firmware stays LOCAL, never upload the IPSW: UniversalMac_15.6.1_24G90_Restore.ipsw (16,814,137,790bytes), Apple-CDN origin; previously verified SHA1a19ba56bb931769580060647a466c5b2d09da761. The incomplete27.0.1 partial download is not the agreed restore image.
-
-No antivirus disabling, network alteration, unrelated process termination, test signing, signature-enforcement weakening, SecureBoot changes, private-key uploads or PC process inventories. No claim of success until the restore reports real completion and normal Mac startup is confirmed.
-
-
-Cleanup-source review addendum: the attempt7 coordinator now permits only the known residual exact1905-package cleanup after certificate/key cleanup has succeeded. The helper skips device removal if that exact devnode is already absent, permits one removal plus up to10seconds read-only PnP convergence, and never uses removal retries/force/uninstall. Other errors stop for review. PowerShell5/7 syntax and default read-only absent-state inspections PASS; live driver-cleanup paths have NOT been exercised. A missing space in Where-Object -ieq$id was found/fixed during inspection; the old post-removal abort may share that cause, but its original exception was not captured. Details: outputs/Mac1905-driver/cleanup-source-review.json. No driver/trust changes were performed by these tests.
-
-FINAL PREPARATION RESULTS
-Full private snapshot tested: eb971be5c11457e83cb29b132b1d260eb461dd52. Actual B908 program passed check-usb on THREE independent Windows cloud runners (0.37/0.31/0.36s, exit0, private27016gone, existing27015unchanged). Seven ops scripts AST-only in PS5.1+PS7 across allthree:42syntaxchecksPASS. Nine parser jobs on same snapshot passed900,000cases. Results: results/cloud/MAIN-PROGRAM-RESULTS.md and linked workflow runs40059588962+40059589027. No physical Mac restore performed.
-Byte-exact source archive: archives/source-snapshot.zip (2,133 files); working source tree also available. Local16GBIPSW remainsready. No needto rebuild/redownloadfor the evening absent new evidence. Before stopping, fresh hostcheckcertificates0/privatekeyfalse/1905packageabsent/oldbroadpackageabsent/restores0/private27016listeners0; Defender realtime+tamperON. Mac installation NOTcomplete.
-
-
-
-
-
+Neste arbeid: behold arkivet privat, lag kort leverandørunderlag i Stein Aune/DSSA sitt navn og klargjør en ren, generell Mac mini M4-utgave. Den personlåste, fysisk testede B592-versjonen bevares som referanse. Ikke start en ny restore på den ferdige Mac-en. Ingen publisering eller sending til leverandøren er godkjent.

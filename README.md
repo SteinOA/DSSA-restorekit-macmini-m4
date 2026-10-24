@@ -4,7 +4,7 @@ Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac
 
 Se [resultatet](docs/FORSOK9-RESULTAT.txt) og [kontrollpunktene](results/attempt9-restore-result.json). Den konkrete native Windows-portfeilen er rettet og testet før det vellykkede forsøket; [rettelsen er dokumentert her](docs/NATIVE-PORT-RETTELSE.txt).
 
-PC-opprydding: sertifikattillit og privat nøkkel er borte. Den siste driverpakken venter på at brukeren trekker USB-kabelen; ingen tilstedeværende enhet fjernes. [Fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt) har eksakt status. Ingen ny restore skal startes.
+PC-oppryddingen er fullført: midlertidig driverpakke, sertifikattillit og privat nøkkel er borte. Apples drivere og tjeneste er beholdt. Windows-beskyttelsen er på. [Fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt) har eksakt status. Ingen ny restore skal startes.
 - `source/`: komplett kildekode fra RestoreKit v0.5.13 med lokale rettelser og innholdet i alle vendor-moduler.
 - `archives/source-snapshot.zip`: samme 2 133 kildefiler med nøyaktige opprinnelige byte. Bruk dette arkivet når kontrollsummene i `source-manifest.json` skal sammenlignes; enkelte vendor-moduler har egne Git-regler for linjeskift.
 - `patches/`, `provenance.json`, `source-manifest.json`: opprinnelse, endringer, lisenser og kontrollsummer.
@@ -27,6 +27,7 @@ These are pure-data software tests. They access no USB devices, drivers, certifi
 `source-provenance.json` records SHA-256 hashes of the copied production header and original fixtures. Cloud workflow access is read-only (`contents: read`), with a ten-minute limit per job and no repository secrets.
 
 The archived driver CAT contains a public signing certificate, not its private key or any Windows trust store. Do not commit firmware IPSWs, private keys, credentials, local trust-store exports or raw PC inventories. Public release/publication is not authorized.
+
 
 
 
