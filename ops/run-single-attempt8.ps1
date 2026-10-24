@@ -1,0 +1,105 @@
+# Execute only after explicit approval for temporary certificate trust and PID1905 staging.
+param(
+ [Parameter(Mandatory=$true)][ValidatePattern('^[A-Fa-f0-9]{64}$')][string]$ExpectedHash,
+ [Parameter(Mandatory=$true)][ValidatePattern('^[A-Fa-f0-9]{64}$')][string]$ExpectedAppleMuxHash
+)
+$ErrorActionPreference='Stop'
+$root=Split-Path -Parent $PSScriptRoot
+Set-Location -LiteralPath $root
+$log=Join-Path $PSScriptRoot ('attempt8-coordinator-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.log')
+$statusFile=Join-Path $PSScriptRoot 'attempt8-coordinator-status.txt'
+$child=$null
+$prepareStarted=$false
+$result=1
+$started=Get-Date
+$exe=Join-Path $PSScriptRoot 'restorekit-source\target\x86_64-pc-windows-gnu\release\restorekit.exe'
+function Report([string]$message){
+ $line=(Get-Date -Format o)+' '+$message
+ $line | Add-Content -LiteralPath $log
+ $line | Set-Content -LiteralPath $statusFile
+ Write-Output $line
+}
+function Own-NativeProcesses {
+ @(Get-CimInstance Win32_Process -Filter "Name='restorekit.exe'" | Where-Object {
+  $_.ExecutablePath -ieq $exe -and $_.CreationDate -ge $started -and
+  $_.CommandLine -match '\brestore\b' -and $_.CommandLine -match '165715da257cbd11'
+ })
+}
+try {
+ if((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash -ine $ExpectedHash){throw 'Reviewed executable changed'}
+ if(Get-Process restorekit -ErrorAction SilentlyContinue){throw 'A restore process already exists'}
+ Report 'Preparing only separately approved temporary public-certificate trust and exact PID1905 package'
+ $prepareStarted=$true
+ & (Join-Path $PSScriptRoot 'prepare-mac1905-temporary.ps1') -ApplyAfterUserApproval
+ Report 'PREPARED_WAITING_FOR_DFU: turn on the same Mac in DFU now; maximum wait 180 seconds; no restore has started'
+ $deadline=(Get-Date).AddSeconds(180)
+ $found=$false
+ while((Get-Date) -lt $deadline){
+  $parents=@(Get-PnpDevice -PresentOnly | Where-Object InstanceId -match '^USB\\VID_05AC&PID_F014\\')
+  if($parents.Count -eq 1){$found=$true;break}
+  Start-Sleep -Seconds 2
+ }
+ if(-not $found){throw 'DFU preparation wait expired; no restore was started'}
+ Report 'DFU node present; invoking one supervisor with fresh identity, mode, driver and process preflight'
+ $scriptPath=Join-Path $PSScriptRoot 'restore-apple-attempt8.ps1'
+ $launchArguments='-NoProfile -File "'+$scriptPath+'" -ExpectedHash '+$ExpectedHash+' -ExpectedAppleMuxHash '+$ExpectedAppleMuxHash
+ $windowsPowerShell=Join-Path $env:windir 'System32\WindowsPowerShell\v1.0\powershell.exe'
+ $child=Start-Process -FilePath $windowsPowerShell -ArgumentList $launchArguments -WorkingDirectory $root -WindowStyle Hidden -PassThru
+ $childHandle=$child.Handle
+ $child.WaitForExit()
+ $child.Refresh()
+ $result=$child.ExitCode
+ Report ('Single supervisor exited code='+$result)
+} catch {
+ Report ('Coordinator error: '+$_.Exception.Message)
+ $result=1
+} finally {
+ # A failed status supervisor must never trigger driver cleanup during an active restore.
+ # This only waits for the exact new main executable, target and restore command.
+ while(@(Own-NativeProcesses).Count){
+  Report 'Own restore remains active; retaining monitoring until it exits before cleanup'
+  Start-Sleep -Seconds 10
+ }
+ if($prepareStarted){
+  $cleanupStarted=Get-Date
+  try {
+   Report 'Restore has ended (or never started); removing exact temporary package, certificate trust and any exact-key residue'
+   try {
+    & (Join-Path $PSScriptRoot 'cleanup-mac1905-temporary.ps1') -ApplyAfterUserApproval
+   } catch {
+    $primaryFailure=$_.Exception.Message
+    Report ('Primary cleanup stopped: '+$primaryFailure)
+    # Allow only the already-observed exact-package-in-use failure after security cleanup.
+    . (Join-Path $PSScriptRoot 'mac1905-temporary-common.ps1')
+    if(@(Find-TaskCertificates).Count -or (Test-TaskKeyExists)){throw 'Security cleanup incomplete; phantom fallback is not allowed.'}
+    $recent=@(Get-ChildItem -LiteralPath (Join-Path $root 'outputs/Mac1905-driver') -Directory -Filter 'Cleanup-*' | Where-Object {$_.CreationTime -ge $cleanupStarted} | Sort-Object CreationTime -Descending | Select-Object -First 1)
+    if($recent.Count-ne1){throw 'No result log from this cleanup; stop for review.'}
+    $cleanupResult=Get-Content -LiteralPath (Join-Path $recent[0].FullName 'result.json') -Raw | ConvertFrom-Json
+    $allowedErrors=@('Package removal failed; no force/uninstall fallback is permitted.','Final cleanup incomplete; inspect exact residual objects in result.json.')
+    if(@($cleanupResult.Errors | Where-Object {$_ -notin $allowedErrors}).Count -or @($cleanupResult.Errors).Count-eq0 -or @($cleanupResult.UnexpectedDeletedPackages).Count -or @($cleanupResult.RemainingCertificates).Count -or $cleanupResult.PrivateKeyStillExists){throw 'Cleanup failed for a different reason; exact phantom fallback is not allowed.'}
+    $packages=@(Get-TaskDriverPackages)
+    if($packages.Count-ne1){throw 'Expected exactly the one residual 1905 package; stop for review.'}
+    $published=$packages[0].Driver
+    if((Get-FileHash -LiteralPath (Join-Path $env:windir ('INF/'+$published)) -Algorithm SHA256).Hash-ne$script:TaskInfHash){throw 'Residual package identity differs from reviewed hash.'}
+    $exact='USB\VID_05AC&PID_1905\00008132-001808291EA2401C'
+    $phantom=@(Get-PnpDevice -ErrorAction Stop | Where-Object InstanceId -ieq $exact)
+    if($phantom.Count-gt1){throw 'Ambiguous exact phantom identity.'}
+    if($phantom.Count){
+     if([bool](Get-PnpDeviceProperty -InstanceId $exact -KeyName DEVPKEY_Device_IsPresent -ErrorAction Stop).Data){throw 'Exact Mac1905 is still present; do not remove it.'}
+    }
+    Report 'Security cleanup verified; removing only the exact disconnected phantom if it exists, then the exact residual1905 package'
+    & (Join-Path $PSScriptRoot 'remove-exact-phantom-mac1905.ps1') -ApplyAfterUserApproval
+    # Ordinary cleanup is run again only to verify the final empty package/trust/key state.
+    & (Join-Path $PSScriptRoot 'cleanup-mac1905-temporary.ps1') -ApplyAfterUserApproval
+   }
+   Report 'CLEANUP_COMPLETED: inspect final result log; no automatic restore retry'
+  } catch {
+   Report ('CLEANUP_REQUIRES_ATTENTION: '+$_.Exception.Message)
+   $result=1
+  }
+ }
+ Report ('Coordinator finished code='+$result)
+}
+exit $result
+
+

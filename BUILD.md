@@ -10,7 +10,7 @@ For a byte-exact copy, extract `archives/source-snapshot.zip` and verify
 `source-manifest.json`; vendor Git attributes can otherwise change line endings.
 
 The existing `bin/windows-x64/restorekit.exe` is the single tested main build,
-SHA256 `B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278`.
+SHA256 `48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D`.
 The main executable builds successfully; completing the Mac restore is still
 unverified. Building or inspecting this repository does not authorize a restore,
 driver installation, certificate import, signing, or security-setting change.
@@ -110,3 +110,4 @@ vendor licenses remain in their original source directories. Raw working-tree
 diffs are in `patches/`. Additional source files that were untracked in the
 upstream checkout are included as ordinary files and listed in provenance.
 `source-manifest.json` records every copied source file's size and SHA256.
+
