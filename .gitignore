@@ -1,0 +1,14 @@
+*.exe
+*.obj
+*.o
+fixtures
+fuzz
+work/
+*.ipsw
+*.pfx
+*.p12
+*.key
+*.cer
+*.crt
+*.cat
+.env

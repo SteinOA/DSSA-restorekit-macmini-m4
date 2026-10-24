@@ -1,0 +1,49 @@
+name: Pure data parser tests
+on:
+  workflow_dispatch:
+  push:
+    paths: ['src/restore_identity.h', 'tests/**', '.github/workflows/**', 'source-provenance.json']
+permissions:
+  contents: read
+jobs:
+  linux:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        seed: [104729, 130363, 155921]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Exact source provenance
+        run: python3 -c "import json,hashlib; p=json.load(open('source-provenance.json')); assert all(hashlib.sha256(open(f['repository_path'],'rb').read()).hexdigest()==f['sha256'] for f in p['files'])"
+      - name: Compile and run sanitizer regressions and deterministic fuzz
+        env:
+          CC: ${{ matrix.compiler }}
+          SEED: ${{ matrix.seed }}
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: |
+          "$CC" -std=c11 -Wall -Wextra -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/restore_identity_fixtures.c -o fixtures
+          "$CC" -std=c11 -Wall -Wextra -Werror -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer tests/identity_fuzz.c -o fuzz
+          ./fixtures
+          ./fuzz "$SEED"
+  windows:
+    timeout-minutes: 10
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [104729, 130363, 155921]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Exact source provenance
+        run: python -c "import json,hashlib; p=json.load(open('source-provenance.json')); assert all(hashlib.sha256(open(f['repository_path'],'rb').read()).hexdigest()==f['sha256'] for f in p['files'])"
+      - name: Compile and run Windows regressions and deterministic fuzz
+        shell: cmd
+        run: call tests\run-windows.cmd ${{ matrix.seed }}

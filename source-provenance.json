@@ -1,0 +1,15 @@
+{
+  "scope": "Exact local production parser and existing pure-data fixtures; no PC logs, credentials, keys, certificates or firmware",
+  "files": [
+    {
+      "source": "work/restorekit-source/crates/restorekit-sys/vendor/usbmuxd/src/restore_identity.h",
+      "repository_path": "src/restore_identity.h",
+      "sha256": "6501025dbbe35620b7e90165b3565d8eee2d101647e020af800e1387be4e060b"
+    },
+    {
+      "source": "work/restorekit-source/crates/restorekit-sys/vendor/usbmuxd/tests/restore_identity_fixtures.c",
+      "repository_path": "tests/restore_identity_fixtures.c",
+      "sha256": "e1f24deee4524480654621436fac7b3bc05c58f6b5d0b0010c196c627c4a6cf7"
+    }
+  ]
+}
