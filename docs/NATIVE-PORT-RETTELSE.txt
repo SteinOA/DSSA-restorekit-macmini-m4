@@ -10,7 +10,8 @@ Rettelse: Bare denne Windows-restoreversjonen av C-biblioteket er kompilert med 
 Ny kontroll før restore: Den faktiske C-klienten må utføre ListDevices, og privatserveren må ha akseptert dens forbindelse. Hvis dette feiler, starter ikke firmwareoverføringen. Loggnivået beholder nå milepæler for mux-håndtrykket.
 
 ProgramSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93
-Lokale tester: 3/3 bestod med fraværende arvet endepunkt, arvet Apple27015 og arvet stengt lokalport1. Faktisk C-klient, privatserver, protokollsvar og avslutning ble testet. Apples lytter var uendret og privat27016 borte etter hver test. Skytester av samme program på tre uavhengige Windows2022-maskiner: pågår.
+Lokale tester: 3/3 bestod med fraværende arvet endepunkt, arvet Apple27015 og arvet stengt lokalport1. Faktisk C-klient, privatserver, protokollsvar og avslutning ble testet. Apples lytter var uendret og privat27016 borte etter hver test. Skytester av samme program på tre uavhengige Windows2022-maskiner: 3/3 PASS: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40123670933 (samme B592-program, native C-klient, fraværende og feil arvede endepunkter).
 
 Avgrensning: Dette retter en bevist rutingsfeil. Det er ikke bevist at denne alene forklarer RX-stoppet eller at neste fulle Mac-installasjon lykkes. Serienummerrettelsen fra før beholdes. Ingen ny endring av USB-konfigurasjon, driverpakke, sertifikat, signering eller sikkerhetsinnstillinger er gjort.
 Sertifikattillit og PID1905-driver fra forsøk8 er fortsatt fjernet; disse importeres ikke igjen uten egen godkjenning for neste forsøk.
+

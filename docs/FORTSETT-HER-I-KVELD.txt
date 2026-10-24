@@ -1,3 +1,10 @@
+SISTE STATUS 24.10.2026 KL21:06 – NATIV WINDOWS-PORTFEIL RETTET
+Gjenskapt uten Mac: Rust-proben nådde privat27016, men faktisk C-klient nådde den ikke fordi C getenv og Windows-prosessmiljø var ulike. Bare dette Windows-restorebyggets native C-koblinger er nå låst direkte til127.0.0.1:27016. Ny actual-C ListDevices-kontroll før firmware hindrer samme feil.
+Gjeldende programSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93. Den tidligere48C9-versjonen skal ikke brukes til neste forsøk.
+RED før rettelse, 3/3 lokale GREEN-tester etter rettelse, og 3/3 uavhengige Windows-skytester bestått: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40123670933 . Rettelsen, full kilde, eksakt arkiv og program er bevart i repoet. Se docs/NATIVE-PORT-RETTELSE.txt og results/native-endpoint-cloud.json.
+macOS er ikke installert. Det er ikke bevist at portfeilen alene forklarer RX-stoppet. Forsøk8 er avsluttet; sertifikattillit, privat nøkkel og1905-pakke er fjernet. Ingen ny import eller nytt fysisk forsøk er startet. Forsøk9-skripter og konkret forslag er klare, men ny godkjenning kreves etter brukerens tidligere avgrensning til ett forsøk av gangen. Se outputs/Mac1905-driver/FORSOK9-FORSLAG.txt lokalt eller docs/FORSOK9-FORSLAG.txt i repoet.
+
+ELDRE HISTORIKK FØLGER:
 SISTE STATUS: Forsøk8 avsluttet med feil 24.10.2026. Serienummerlesingen er bekreftet løst på fysisk Mac. Nytt stoppunkt er USB-dataforbindelsen (RX stall) før macOS-installasjon. Opprydding bestod; ingen sertifikattillit, privat nøkkel eller1905-driverpakke står igjen. Ingen nytt fysisk forsøk er godkjent. Se FORSOK8-RESULTAT.txt i outputs/Mac1905-driver, eller results/ATTEMPT8-RESULT.txt i repoet.
 
 ELDRE HISTORIKK FØLGER:
@@ -90,6 +97,7 @@ PowerShell 5 og 7 syntakskontroll er bestått, og begge leste dagens allerede ry
 ARKIV OG START SENERE
 Privatrepo: https://github.com/SteinOA/DSSA-restorekit-macmini-m4 . Full kilde med vendor-moduler (2 133 filer), lisenser, patcher, skript, offentlige driverfiler, testresultater og B908-programmet er lagret. archives/source-snapshot.zip bevarer kildefilene byte for byte; kontrollsummer ligger ved. Firmware og lokal sertifikattillit/nøkler holdes utenfor.
 Når brukeren kommer tilbake: les dette notatet og skriv kort hvilken fersk DFU-/driverkontroll som gjenstår. Bruk det ferdige programmet og eksisterende IPSW, ikke bygg eller last ned på nytt uten ny grunn. Endelig PC-kontroll: Mac-mini-kveld/sluttstatus.json (ingen sertifikat/nøkkel/1905-pakke/egen restore/27016), Defender sanntids- og manipuleringsbeskyttelse begge på. Selve macOS-installasjonen gjenstår.
+
 
 
 

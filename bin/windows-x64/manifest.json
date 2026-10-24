@@ -6,7 +6,7 @@
   "Version": "v0.5.13 with native Windows C connector fixed to private27016",
   "BuildResult": "exit0",
   "LocalNativeCProbeCases": 3,
-  "CloudResults": "pending",
+  "CloudResults": "40123670933:3/3 PASS, same actual program and native C client",
   "MacRestoreCompleted": false,
   "NewRestoreAuthorized": false
 }

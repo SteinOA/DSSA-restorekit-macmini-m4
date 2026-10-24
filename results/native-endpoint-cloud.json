@@ -1,0 +1,72 @@
+{
+  "RunId": 40123670933,
+  "Url": "https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40123670933",
+  "TestedCommit": "d29b87ecda81bba92391cfb035da49eeb6a8c75b",
+  "ProgramSHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+  "Conclusion": "3/3 PASS",
+  "MainResults": [
+    {
+      "Replica": 1,
+      "SHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+      "ExitCode": 0,
+      "Seconds": 0.4,
+      "NoAppleDevicePresent": true,
+      "Private27016Gone": true,
+      "Apple27015Unchanged": true,
+      "Scope": "Actual reviewed Windows main executable: local private mux startup/ListDevices/teardown only. No physical Mac transport or restore claim.",
+      "DriverChanged": false,
+      "CertificateChanged": false,
+      "FirmwareUploaded": false,
+      "DataErased": false
+    },
+    {
+      "Replica": 2,
+      "SHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+      "ExitCode": 0,
+      "Seconds": 0.42,
+      "NoAppleDevicePresent": true,
+      "Private27016Gone": true,
+      "Apple27015Unchanged": true,
+      "Scope": "Actual reviewed Windows main executable: local private mux startup/ListDevices/teardown only. No physical Mac transport or restore claim.",
+      "DriverChanged": false,
+      "CertificateChanged": false,
+      "FirmwareUploaded": false,
+      "DataErased": false
+    },
+    {
+      "Replica": 3,
+      "SHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+      "ExitCode": 0,
+      "Seconds": 0.42,
+      "NoAppleDevicePresent": true,
+      "Private27016Gone": true,
+      "Apple27015Unchanged": true,
+      "Scope": "Actual reviewed Windows main executable: local private mux startup/ListDevices/teardown only. No physical Mac transport or restore claim.",
+      "DriverChanged": false,
+      "CertificateChanged": false,
+      "FirmwareUploaded": false,
+      "DataErased": false
+    }
+  ],
+  "NativeRouting": [
+    {
+      "NativeCClientVerified": true,
+      "InheritedMux": null,
+      "PrivateEndpoint": "127.0.0.1:27016",
+      "Scope": "Actual C ListDevices request must be accepted by the private server; Rust-only TCP success is insufficient"
+    },
+    {
+      "NativeCClientVerified": true,
+      "InheritedMux": "127.0.0.1:27015",
+      "PrivateEndpoint": "127.0.0.1:27016",
+      "Scope": "Actual C ListDevices request must be accepted by the private server; Rust-only TCP success is insufficient"
+    },
+    {
+      "NativeCClientVerified": true,
+      "InheritedMux": "127.0.0.1:1",
+      "PrivateEndpoint": "127.0.0.1:27016",
+      "Scope": "Actual C ListDevices request must be accepted by the private server; Rust-only TCP success is insufficient"
+    }
+  ],
+  "Scope": "No-device native Windows C ListDevices routing and service teardown. Does not prove physical Mac restore."
+}

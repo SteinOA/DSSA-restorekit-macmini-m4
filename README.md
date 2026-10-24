@@ -2,6 +2,8 @@
 
 Privat arkiv for arbeidet med en Mac mini M4 (Mac16,10) med tom intern 2 TB SSD. **macOS er ennå ikke installert.** Forsøk 8 er avsluttet med feil før installasjon. Serienummerlesingen virker; USB-dataoverføringen stopper. Midlertidig sertifikattillit og driverpakke er fjernet. Se [resultatet fra forsøk 8](results/ATTEMPT8-RESULT.txt).
 
+Den native Windows-portfeilen er nå rettet og testet lokalt og på tre Windows-skyverter. Se [rettelsen og avgrensningen](docs/NATIVE-PORT-RETTELSE.txt). Et nytt fysisk forsøk er ennå ikke godkjent.
+
 Start med [fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt). Program, kildekode, rettelser, kontrollskript og testresultater er bevart, slik at vi kan fortsette fra denne tilstanden.
 
 - `source/`: komplett kildekode fra RestoreKit v0.5.13 med lokale rettelser og innholdet i alle vendor-moduler.
@@ -26,6 +28,7 @@ These are pure-data software tests. They access no USB devices, drivers, certifi
 `source-provenance.json` records SHA-256 hashes of the copied production header and original fixtures. Cloud workflow access is read-only (`contents: read`), with a ten-minute limit per job and no repository secrets.
 
 The archived driver CAT contains a public signing certificate, not its private key or any Windows trust store. Do not commit firmware IPSWs, private keys, credentials, local trust-store exports or raw PC inventories. Public release/publication is not authorized.
+
 
 
 
