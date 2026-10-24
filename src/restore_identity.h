@@ -33,14 +33,19 @@ static const char *rk_decode_restore_serial(const unsigned char *data, size_t ac
     serial[0] = '\0';
     const char *error = rk_string_shape(data, actual);
     if (error) return error;
-    size_t count = (actual - 2) / 2;
-    if (count >= capacity) return "serial-too-long";
+    size_t count = (actual - 2) / 2, decoded = 0;
+    int padding = 0;
     for (size_t i = 0; i < count; i++) {
         unsigned char low = data[2 + i*2], high = data[3 + i*2];
-        if (high || !low || low > 0x7f) { serial[0] = '\0'; return "non-ascii-or-nul-serial"; }
-        serial[i] = (char)low;
+        if (high || low > 0x7f) { serial[0] = '\0'; return "non-ascii-serial"; }
+        /* Apple's fixed 40-code-unit restore descriptor zero-pads this 25-char
+         * identity. Only a completely zero suffix is padding, never data. */
+        if (!low) { padding = 1; continue; }
+        if (padding) { serial[0] = '\0'; return "nonzero-after-serial-padding"; }
+        if (decoded + 1 >= capacity) { serial[0] = '\0'; return "serial-too-long"; }
+        serial[decoded++] = (char)low;
     }
-    serial[count] = '\0';
+    serial[decoded] = '\0';
     return NULL;
 }
 

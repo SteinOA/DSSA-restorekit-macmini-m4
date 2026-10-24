@@ -1,0 +1,12 @@
+{
+  "Stage": "GREEN: exact captured Mac descriptor, zero padding, incorrect identities and nonzero suffix regression",
+  "FixtureExit": 0,
+  "FuzzSeeds": [
+    104729,
+    130363,
+    155921
+  ],
+  "FuzzCases": 300000,
+  "UsbAccess": false,
+  "IdentityRestriction": "unchanged exact Mac; only all-zero UTF16 suffix allowed"
+}

@@ -9161,8 +9161,8 @@
   },
   {
     "Path": "crates/restorekit-sys/vendor/usbmuxd/src/restore_identity.h",
-    "Bytes": 2752,
-    "SHA256": "6501025DBBE35620B7E90165B3565D8EEE2D101647E020AF800E1387BE4E060B"
+    "Bytes": 3098,
+    "SHA256": "1250D07880A7562AE44772FAB5FB4F93FFFFE763501424A919DD3C3642071099"
   },
   {
     "Path": "crates/restorekit-sys/vendor/usbmuxd/src/usb.c",
@@ -9201,8 +9201,8 @@
   },
   {
     "Path": "crates/restorekit-sys/vendor/usbmuxd/tests/restore_identity_fixtures.c",
-    "Bytes": 2989,
-    "SHA256": "E1F24DEEE4524480654621436FAC7B3BC05C58F6B5D0B0010C196C627C4A6CF7"
+    "Bytes": 4650,
+    "SHA256": "869B20BD04431917A23D956DD05C0D58C0C0C2F0553044F5612953C8E02401D3"
   },
   {
     "Path": "crates/restorekit-sys/vendor/usbmuxd/udev/39-usbmuxd.rules.in",

@@ -12,6 +12,22 @@ static size_t descriptor(const char *text, unsigned char *out)
 int main(void)
 {
     unsigned char data[255]; char serial[128]; size_t count;
+    /* Exact successful USB read from this Mac, attempt 7: 25 chars + 15 NULs. */
+    static const unsigned char actual_mac_serial[] = {0x52,0x03,0x30,0x00,0x30,0x00,0x30,0x00,0x30,0x00,0x38,0x00,0x31,0x00,0x33,0x00,0x32,0x00,0x2D,0x00,0x30,0x00,0x30,0x00,0x31,0x00,0x38,0x00,0x30,0x00,0x38,0x00,0x32,0x00,0x39,0x00,0x31,0x00,0x45,0x00,0x41,0x00,0x32,0x00,0x34,0x00,0x30,0x00,0x31,0x00,0x43,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    CHECK(sizeof(actual_mac_serial)==82);
+    CHECK(!rk_verify_restore_response(1,actual_mac_serial,sizeof(actual_mac_serial),serial,sizeof(serial)));
+    CHECK(!strcmp(serial,"00008132-001808291EA2401C"));
+    CHECK(!rk_verify_restore_response(1,actual_mac_serial,sizeof(actual_mac_serial),serial,26));
+    CHECK(rk_verify_restore_response(1,actual_mac_serial,sizeof(actual_mac_serial),serial,25)!=NULL);
+    memcpy(data,actual_mac_serial,sizeof(actual_mac_serial));
+    data[54]='A'; /* Nonzero after a NUL is not padding and must never authorize. */
+    CHECK(rk_verify_restore_response(1,data,sizeof(actual_mac_serial),serial,sizeof(serial))!=NULL);
+    memcpy(data,actual_mac_serial,sizeof(actual_mac_serial));
+    data[50]='D'; /* Wrong ECID with otherwise valid zero padding. */
+    CHECK(rk_verify_restore_response(1,data,sizeof(actual_mac_serial),serial,sizeof(serial))!=NULL);
+    memcpy(data,actual_mac_serial,sizeof(actual_mac_serial));
+    data[53]=1; /* Nonzero UTF-16 high byte inside padding. */
+    CHECK(rk_verify_restore_response(1,data,sizeof(actual_mac_serial),serial,sizeof(serial))!=NULL);
     count=descriptor("00008132001808291EA2401C",data);
     CHECK(!rk_verify_restore_response(1,data,count,serial,sizeof(serial)));
     CHECK(!strcmp(serial,"00008132001808291EA2401C"));

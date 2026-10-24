@@ -1,0 +1,6 @@
+{
+  "Stage": "RED: captured Mac descriptor against unchanged B908 decoder",
+  "TestExit": 1,
+  "ExpectedFailure": true,
+  "UsbAccess": false
+}

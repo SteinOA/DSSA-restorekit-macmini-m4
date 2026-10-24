@@ -4,12 +4,12 @@
     {
       "source": "work/restorekit-source/crates/restorekit-sys/vendor/usbmuxd/src/restore_identity.h",
       "repository_path": "src/restore_identity.h",
-      "sha256": "6501025dbbe35620b7e90165b3565d8eee2d101647e020af800e1387be4e060b"
+      "sha256": "1250d07880a7562ae44772fab5fb4f93ffffe763501424a919dd3c3642071099"
     },
     {
       "source": "work/restorekit-source/crates/restorekit-sys/vendor/usbmuxd/tests/restore_identity_fixtures.c",
       "repository_path": "tests/restore_identity_fixtures.c",
-      "sha256": "e1f24deee4524480654621436fac7b3bc05c58f6b5d0b0010c196c627c4a6cf7"
+      "sha256": "869b20bd04431917a23d956dd05c0d58c0c0c2f0553044f5612953c8e02401d3"
     }
   ]
 }

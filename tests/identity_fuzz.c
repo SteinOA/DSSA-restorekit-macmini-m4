@@ -8,6 +8,8 @@ static int oracle(const unsigned char *p, size_t n, size_t capacity) {
     const char expected[]="00008132001808291EA2401C";
     if(n<2 || n>255 || p[0]!=n || p[1]!=3 || (n&1)) return 0;
     size_t count=(n-2)/2;
+    /* Independent oracle: trim only complete zero UTF-16 units at the end. */
+    while(count && p[2+(count-1)*2]==0 && p[3+(count-1)*2]==0) count--;
     if(count>=capacity || (count!=24 && count!=25)) return 0;
     size_t k=0;
     for(size_t i=0;i<count;i++) {
@@ -35,6 +37,10 @@ int main(int argc, char **argv) {
         size_t actual=next_random()%256, capacity=next_random()%129;
         if(iteration%4==0) {
             actual=make_valid(data,(int)(next_random()%2));
+            unsigned padding=next_random()%21;
+            memset(data+actual,0,padding*2);
+            actual+=padding*2;
+            data[0]=(unsigned char)actual;
             unsigned mutations=next_random()%4;
             for(unsigned j=0;j<mutations;j++) data[next_random()%actual]^=(unsigned char)(1u<<(next_random()%8));
         }
