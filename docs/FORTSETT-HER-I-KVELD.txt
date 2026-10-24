@@ -1,3 +1,11 @@
+SISTE STATUS 24.10.2026 – FORSØK9 LYKTES, MAC-OPPSTART BEKREFTET
+macOS15.6.1/24G90 er gjenopprettet fra Windows til Mac mini M4 med nySSD. Nativeprogrammet B592 meldte Restore Finished / DONE og exit0 kl21:23:58, varighet10min55sek. Alle133fullførte kontrollpunkter hadde resultat0. Brukeren sendte to bilder av macOS-oppsettets tastatur-/mus-skjerm og meldte lyd fra Mac-en. Vanlig førstegangsoppsett trenger tilkoblet tastatur/mus; ingen ny restore skal startes.
+PC-opprydding: Den midlertidige sertifikattilliten og private CNG-nøkkelen er bekreftet borte. PID1905-driverpakken står igjen fordi Mac-en dukket opp med ny USB-serieidentitet etter oppstart. Sikkerhetsvakten stoppet før den tilstedeværende enheten ble endret. Brukeren er bedt om å trekke USB mellom PC og Mac; bekreftelsen mangler ennå.
+En avgrenset opprydding er klargjort i work/cleanup-after-attempt9.ps1, arkivert i repo/ops. Den må bare kjøres etter at fersk kontroll viser ingen tilstedeværende AppleUSB/KIS. Kun to eksakte frakoblede1905-oppføringer og den hash-/navnverifiserte pakken kan fjernes, med sikkerhetskopi og sluttkontroll. Ingen ny sertifikattillit, signering eller sikkerhetsendring. Sluttloggen skal fortsatt kontrolleres og lagres før oppdraget avsluttes helt.
+ProgramSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
+Se results/attempt9-restore-result.json og lokalt outputs/Mac1905-driver/FORSOK9-RESULTAT.txt. Ingen ny restore-godkjenning foreligger eller trengs for denne Mac-en.
+
+ELDRE HISTORIKK FØLGER:
 SISTE STATUS 24.10.2026 KL21:06 – NATIV WINDOWS-PORTFEIL RETTET
 Gjenskapt uten Mac: Rust-proben nådde privat27016, men faktisk C-klient nådde den ikke fordi C getenv og Windows-prosessmiljø var ulike. Bare dette Windows-restorebyggets native C-koblinger er nå låst direkte til127.0.0.1:27016. Ny actual-C ListDevices-kontroll før firmware hindrer samme feil.
 Gjeldende programSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93. Den tidligere48C9-versjonen skal ikke brukes til neste forsøk.
@@ -97,6 +105,7 @@ PowerShell 5 og 7 syntakskontroll er bestått, og begge leste dagens allerede ry
 ARKIV OG START SENERE
 Privatrepo: https://github.com/SteinOA/DSSA-restorekit-macmini-m4 . Full kilde med vendor-moduler (2 133 filer), lisenser, patcher, skript, offentlige driverfiler, testresultater og B908-programmet er lagret. archives/source-snapshot.zip bevarer kildefilene byte for byte; kontrollsummer ligger ved. Firmware og lokal sertifikattillit/nøkler holdes utenfor.
 Når brukeren kommer tilbake: les dette notatet og skriv kort hvilken fersk DFU-/driverkontroll som gjenstår. Bruk det ferdige programmet og eksisterende IPSW, ikke bygg eller last ned på nytt uten ny grunn. Endelig PC-kontroll: Mac-mini-kveld/sluttstatus.json (ingen sertifikat/nøkkel/1905-pakke/egen restore/27016), Defender sanntids- og manipuleringsbeskyttelse begge på. Selve macOS-installasjonen gjenstår.
+
 
 
 

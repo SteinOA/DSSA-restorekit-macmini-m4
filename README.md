@@ -1,11 +1,10 @@
 # DSSA – Mac mini M4 restore fra Windows
 
-Privat arkiv for arbeidet med en Mac mini M4 (Mac16,10) med tom intern 2 TB SSD. **macOS er ennå ikke installert.** Forsøk 8 er avsluttet med feil før installasjon. Serienummerlesingen virker; USB-dataoverføringen stopper. Midlertidig sertifikattillit og driverpakke er fjernet. Se [resultatet fra forsøk 8](results/ATTEMPT8-RESULT.txt).
+Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac16,10) med ny tom2TBSSD. Forsøk9 fullførte macOS15.6.1/24G90 med exit0, og brukeren har bekreftet oppstart med bilder av oppsettsassistenten.
 
-Den native Windows-portfeilen er nå rettet og testet lokalt og på tre Windows-skyverter. Se [rettelsen og avgrensningen](docs/NATIVE-PORT-RETTELSE.txt). Et nytt fysisk forsøk er ennå ikke godkjent.
+Se [resultatet](docs/FORSOK9-RESULTAT.txt) og [kontrollpunktene](results/attempt9-restore-result.json). Den konkrete native Windows-portfeilen er rettet og testet før det vellykkede forsøket; [rettelsen er dokumentert her](docs/NATIVE-PORT-RETTELSE.txt).
 
-Start med [fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt). Program, kildekode, rettelser, kontrollskript og testresultater er bevart, slik at vi kan fortsette fra denne tilstanden.
-
+PC-opprydding: sertifikattillit og privat nøkkel er borte. Den siste driverpakken venter på at brukeren trekker USB-kabelen; ingen tilstedeværende enhet fjernes. [Fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt) har eksakt status. Ingen ny restore skal startes.
 - `source/`: komplett kildekode fra RestoreKit v0.5.13 med lokale rettelser og innholdet i alle vendor-moduler.
 - `archives/source-snapshot.zip`: samme 2 133 kildefiler med nøyaktige opprinnelige byte. Bruk dette arkivet når kontrollsummene i `source-manifest.json` skal sammenlignes; enkelte vendor-moduler har egne Git-regler for linjeskift.
 - `patches/`, `provenance.json`, `source-manifest.json`: opprinnelse, endringer, lisenser og kontrollsummer.
@@ -28,6 +27,7 @@ These are pure-data software tests. They access no USB devices, drivers, certifi
 `source-provenance.json` records SHA-256 hashes of the copied production header and original fixtures. Cloud workflow access is read-only (`contents: read`), with a ten-minute limit per job and no repository secrets.
 
 The archived driver CAT contains a public signing certificate, not its private key or any Windows trust store. Do not commit firmware IPSWs, private keys, credentials, local trust-store exports or raw PC inventories. Public release/publication is not authorized.
+
 
 
 

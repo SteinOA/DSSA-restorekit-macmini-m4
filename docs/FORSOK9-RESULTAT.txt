@@ -1,0 +1,9 @@
+FORSØK9 LYKTES – 24.10.2026
+Restoreprogrammet meldte Status: Restore Finished / DONE og avsluttet med kode0 kl21:23:58 etter10min55sek. Alle133fullførte kontrollpunkter hadde resultat0.
+Brukeren sendte to fotografier av macOS-oppsettets Bluetooth-skjerm for tastatur og mus, og meldte lyd fra Mac-en. Dette bekrefter oppstart etter restoren. Tastatur/mus må kobles til for å fortsette vanlig førstegangsoppsett.
+ProgramSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
+macOS-bilde: UniversalMac_15.6.1_24G90_Restore.ipsw.
+Ingen automatiske restore-gjentakelser eller driverbytter under installasjonen. Privat27016stoppet etterpå. Apples27015beholdt samme eier/adresse.
+
+PC-opprydding: Sertifikattilliten er fjernet fra alle gjennomsøkte lagre. Privat CNG-nøkkel finnes ikke. Driverpakken står midlertidig igjen fordi Mac-en etter normal oppstart meldte ny1905-serieidentitet. Oppryddingsvakten stoppet ved denne nye tilstedeværende enheten; ingen tilstedeværende enhet ble fjernet.
+Brukeren er bedt om å trekke USB mellom PC og Mac. Deretter er en avgrenset opprydding klargjort for bare de to nøyaktige frakoblede oppføringene som bruker den hashverifiserte pakken. Begge sikkerhetskopieres først. Sluttresultat skal føyes til før avslutning.

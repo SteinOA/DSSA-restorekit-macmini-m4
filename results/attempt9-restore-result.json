@@ -1,0 +1,1885 @@
+{
+  "Attempt": 9,
+  "Model": "Mac mini M4 / Mac16,10",
+  "IPSW": "UniversalMac_15.6.1_24G90_Restore.ipsw",
+  "ProgramSHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+  "NativeStarted": "2026-10-24T21:13:03+02:00",
+  "NativeFinished": "2026-10-24T21:23:58+02:00",
+  "NativeExitCode": 0,
+  "FinalDeviceStatus": "Restore Finished",
+  "Seconds": 655,
+  "PrivateMuxGone": true,
+  "AppleListenerUnchanged": true,
+  "AutomaticRestoreRetries": 0,
+  "DriverRebindingsDuringRestore": 0,
+  "NativeLogSHA256": "703B55EE701428C98612798E433A0BAF5030709B9BA3ADCE6DE0C6C3E1B9DC7E",
+  "CheckpointCount": 266,
+  "Checkpoints": [
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "is_host_compatible",
+      "CHECKPOINT_ID": 1621,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_weight_from_options",
+      "CHECKPOINT_ID": 1540,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_weight_from_options",
+      "CHECKPOINT_ID": 1540,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "libauthinstall_callback",
+      "CHECKPOINT_ID": 1679,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "libauthinstall_callback",
+      "CHECKPOINT_ID": 1679,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_macos_ticket",
+      "CHECKPOINT_ID": 5647,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_macos_ticket",
+      "CHECKPOINT_ID": 5647,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_ticket",
+      "CHECKPOINT_ID": 1547,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_ticket",
+      "CHECKPOINT_ID": 1547,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "wait_for_storage",
+      "CHECKPOINT_ID": 1549,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "wait_for_storage",
+      "CHECKPOINT_ID": 1549,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_NAND_firmware",
+      "CHECKPOINT_ID": 1550,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_NAND_firmware",
+      "CHECKPOINT_ID": 1550,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_remap_variable",
+      "CHECKPOINT_ID": 1551,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_remap_variable",
+      "CHECKPOINT_ID": 1551,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "print_nvram_variables",
+      "CHECKPOINT_ID": 1628,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "print_nvram_variables",
+      "CHECKPOINT_ID": 1628,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "asp_nand_set_writable",
+      "CHECKPOINT_ID": 1552,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "asp_nand_set_writable",
+      "CHECKPOINT_ID": 1552,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "find_filesystem_partitions",
+      "CHECKPOINT_ID": 1555,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "find_filesystem_partitions",
+      "CHECKPOINT_ID": 1555,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "verify_storage_for_update",
+      "CHECKPOINT_ID": 1662,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "verify_storage_for_update",
+      "CHECKPOINT_ID": 1662,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "load_sep_os",
+      "CHECKPOINT_ID": 1545,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "load_sep_os",
+      "CHECKPOINT_ID": 1545,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "preload_keys_for_fsck",
+      "CHECKPOINT_ID": 1683,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "preload_keys_for_fsck",
+      "CHECKPOINT_ID": 1683,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fsck_filesystems",
+      "CHECKPOINT_ID": 1637,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fsck_filesystems",
+      "CHECKPOINT_ID": 1637,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "mount_system_partition",
+      "CHECKPOINT_ID": 1556,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "mount_system_partition",
+      "CHECKPOINT_ID": 1556,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fix_cache_delete",
+      "CHECKPOINT_ID": 1686,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fix_cache_delete",
+      "CHECKPOINT_ID": 1686,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clean_update_volume",
+      "CHECKPOINT_ID": 1729,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clean_update_volume",
+      "CHECKPOINT_ID": 1729,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "space_checks",
+      "CHECKPOINT_ID": 1699,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "space_checks",
+      "CHECKPOINT_ID": 1699,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_mobile_gestalt_cache",
+      "CHECKPOINT_ID": 1695,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_mobile_gestalt_cache",
+      "CHECKPOINT_ID": 1695,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "read_previous_os_build_version",
+      "CHECKPOINT_ID": 1620,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "read_previous_os_build_version",
+      "CHECKPOINT_ID": 1620,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "downgrade_check",
+      "CHECKPOINT_ID": 1687,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "downgrade_check",
+      "CHECKPOINT_ID": 1687,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "copy_hardware_info",
+      "CHECKPOINT_ID": 1557,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "copy_hardware_info",
+      "CHECKPOINT_ID": 1557,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_create",
+      "CHECKPOINT_ID": 1558,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_create",
+      "CHECKPOINT_ID": 1558,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_save_data",
+      "CHECKPOINT_ID": 1559,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_save_data",
+      "CHECKPOINT_ID": 1559,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "check_for_restore_log",
+      "CHECKPOINT_ID": 1561,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "check_for_restore_log",
+      "CHECKPOINT_ID": 1561,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "read_persistent_files",
+      "CHECKPOINT_ID": 1633,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "read_persistent_files",
+      "CHECKPOINT_ID": 1633,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "unmount_unconditionally",
+      "CHECKPOINT_ID": 1565,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "unmount_unconditionally",
+      "CHECKPOINT_ID": 1565,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clean_nand",
+      "CHECKPOINT_ID": 1614,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clean_nand",
+      "CHECKPOINT_ID": 1614,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_nvram",
+      "CHECKPOINT_ID": 1616,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_nvram",
+      "CHECKPOINT_ID": 1616,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_bootpolicy_nvram",
+      "CHECKPOINT_ID": 1721,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "clear_bootpolicy_nvram",
+      "CHECKPOINT_ID": 1721,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "format_effaceable_storage",
+      "CHECKPOINT_ID": 1567,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "format_effaceable_storage",
+      "CHECKPOINT_ID": 1567,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "format_ean_storage",
+      "CHECKPOINT_ID": 1674,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "format_ean_storage",
+      "CHECKPOINT_ID": 1674,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_filesystem_partitions",
+      "CHECKPOINT_ID": 1569,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_filesystem_partitions",
+      "CHECKPOINT_ID": 1569,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "perform_main_os_prepare",
+      "CHECKPOINT_ID": 1655,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_partitions_for_apfs",
+      "CHECKPOINT_ID": 1632,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_partitions_for_apfs",
+      "CHECKPOINT_ID": 1632,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "reload_filesystem_partitions",
+      "CHECKPOINT_ID": 1570,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "reload_filesystem_partitions",
+      "CHECKPOINT_ID": 1570,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "format_media",
+      "CHECKPOINT_ID": 1624,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "format_media",
+      "CHECKPOINT_ID": 1624,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "find_volumes_after_format",
+      "CHECKPOINT_ID": 1625,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "find_volumes_after_format",
+      "CHECKPOINT_ID": 1625,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "prepare_for_system_image",
+      "CHECKPOINT_ID": 1715,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "prepare_for_system_image",
+      "CHECKPOINT_ID": 1715,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "init_gigalocker",
+      "CHECKPOINT_ID": 1653,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "init_gigalocker",
+      "CHECKPOINT_ID": 1653,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "init_permanent_update_volume",
+      "CHECKPOINT_ID": 1676,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "init_permanent_update_volume",
+      "CHECKPOINT_ID": 1676,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "mount_filesystem",
+      "CHECKPOINT_ID": 1574,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "mount_filesystem",
+      "CHECKPOINT_ID": 1574,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "restore_system_image",
+      "CHECKPOINT_ID": 1627,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "restore_system_image",
+      "CHECKPOINT_ID": 1627,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "write_persistent_files",
+      "CHECKPOINT_ID": 1634,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "write_persistent_files",
+      "CHECKPOINT_ID": 1634,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "perform_main_os_prepare",
+      "CHECKPOINT_ID": 1655,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "perform_short_prepare",
+      "CHECKPOINT_ID": 1658,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "perform_short_prepare",
+      "CHECKPOINT_ID": 1658,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "perform_restore_installing",
+      "CHECKPOINT_ID": 1659,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_restore_saved_data",
+      "CHECKPOINT_ID": 1575,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_restore_saved_data",
+      "CHECKPOINT_ID": 1575,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_device_firmware_pre_fdr",
+      "CHECKPOINT_ID": 1690,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_aht",
+      "CHECKPOINT_ID": 4876,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_aht",
+      "CHECKPOINT_ID": 4876,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_device_firmware_pre_fdr",
+      "CHECKPOINT_ID": 1690,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_prepare",
+      "CHECKPOINT_ID": 1691,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_prepare",
+      "CHECKPOINT_ID": 1691,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_recover",
+      "CHECKPOINT_ID": 1588,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_recover",
+      "CHECKPOINT_ID": 1588,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_auto_challenge_claim",
+      "CHECKPOINT_ID": 1661,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_auto_challenge_claim",
+      "CHECKPOINT_ID": 1661,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_device_firmware",
+      "CHECKPOINT_ID": 1589,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_iBoot",
+      "CHECKPOINT_ID": 4864,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_iBoot",
+      "CHECKPOINT_ID": 4864,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_ean",
+      "CHECKPOINT_ID": 4882,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_ean",
+      "CHECKPOINT_ID": 4882,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_fud",
+      "CHECKPOINT_ID": 4874,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_fud",
+      "CHECKPOINT_ID": 4874,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_stockholm",
+      "CHECKPOINT_ID": 4868,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_stockholm",
+      "CHECKPOINT_ID": 4868,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_rose",
+      "CHECKPOINT_ID": 4880,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_rose",
+      "CHECKPOINT_ID": 4880,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_se",
+      "CHECKPOINT_ID": 4873,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_se",
+      "CHECKPOINT_ID": 4873,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_aht",
+      "CHECKPOINT_ID": 4876,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_aht",
+      "CHECKPOINT_ID": 4876,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_tcon",
+      "CHECKPOINT_ID": 4870,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_tcon",
+      "CHECKPOINT_ID": 4870,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_orion",
+      "CHECKPOINT_ID": 4871,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_orion",
+      "CHECKPOINT_ID": 4871,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_madea",
+      "CHECKPOINT_ID": 4872,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_madea",
+      "CHECKPOINT_ID": 4872,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_peppy",
+      "CHECKPOINT_ID": 4878,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_peppy",
+      "CHECKPOINT_ID": 4878,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_nitrogen",
+      "CHECKPOINT_ID": 4879,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_nitrogen",
+      "CHECKPOINT_ID": 4879,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_usbc",
+      "CHECKPOINT_ID": 4875,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_usbc",
+      "CHECKPOINT_ID": 4875,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_canary",
+      "CHECKPOINT_ID": 4895,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_canary",
+      "CHECKPOINT_ID": 4895,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_appletcon",
+      "CHECKPOINT_ID": 4886,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_appletcon",
+      "CHECKPOINT_ID": 4886,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_tcon",
+      "CHECKPOINT_ID": 4902,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_tcon",
+      "CHECKPOINT_ID": 4902,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_orion",
+      "CHECKPOINT_ID": 4903,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_orion",
+      "CHECKPOINT_ID": 4903,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_peppy",
+      "CHECKPOINT_ID": 4904,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_peppy",
+      "CHECKPOINT_ID": 4904,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_nitrogen",
+      "CHECKPOINT_ID": 4905,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_nitrogen",
+      "CHECKPOINT_ID": 4905,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_usbc",
+      "CHECKPOINT_ID": 4901,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_usbc",
+      "CHECKPOINT_ID": 4901,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_ace3",
+      "CHECKPOINT_ID": 4893,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_ace3",
+      "CHECKPOINT_ID": 4893,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_usbcretimer",
+      "CHECKPOINT_ID": 4888,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_usbcretimer",
+      "CHECKPOINT_ID": 4888,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_PFX",
+      "CHECKPOINT_ID": 4897,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_PFX",
+      "CHECKPOINT_ID": 4897,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_PS190",
+      "CHECKPOINT_ID": 4892,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_PS190",
+      "CHECKPOINT_ID": 4892,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_stockholm",
+      "CHECKPOINT_ID": 4912,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_stockholm",
+      "CHECKPOINT_ID": 4912,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_rose",
+      "CHECKPOINT_ID": 4910,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_rose",
+      "CHECKPOINT_ID": 4910,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_se",
+      "CHECKPOINT_ID": 4911,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_update_se",
+      "CHECKPOINT_ID": 4911,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_appletconnuarp",
+      "CHECKPOINT_ID": 4900,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_appletconnuarp",
+      "CHECKPOINT_ID": 4900,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_device_firmware",
+      "CHECKPOINT_ID": 1589,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "verify_fdr_data",
+      "CHECKPOINT_ID": 1596,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "verify_fdr_data",
+      "CHECKPOINT_ID": 1596,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_firmware_post_sealing",
+      "CHECKPOINT_ID": 1640,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_rose_postseal",
+      "CHECKPOINT_ID": 5379,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_rose_postseal",
+      "CHECKPOINT_ID": 5379,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "stage_fdr_ean",
+      "CHECKPOINT_ID": 4890,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "stage_fdr_ean",
+      "CHECKPOINT_ID": 4890,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "ensure_fdr_ean",
+      "CHECKPOINT_ID": 4889,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "ensure_fdr_ean",
+      "CHECKPOINT_ID": 4889,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_fdr_ean",
+      "CHECKPOINT_ID": 5380,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_WARNING": "update_fdr_ean missing data for eCfg.",
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_NAME": "update_fdr_ean",
+      "CHECKPOINT_ID": 5380,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_fillmore",
+      "CHECKPOINT_ID": 4884,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_fillmore",
+      "CHECKPOINT_ID": 4884,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "update_firmware_post_sealing",
+      "CHECKPOINT_ID": 1640,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_verify_sealed_manifest",
+      "CHECKPOINT_ID": 1597,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fdr_verify_sealed_manifest",
+      "CHECKPOINT_ID": 1597,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "commit_sep_os",
+      "CHECKPOINT_ID": 1647,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "commit_sep_os",
+      "CHECKPOINT_ID": 1647,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_system_image_invert_retry",
+      "CHECKPOINT_ID": 1716,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "await_system_image_invert_retry",
+      "CHECKPOINT_ID": 1716,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_protected_filesystems",
+      "CHECKPOINT_ID": 1652,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_protected_filesystems",
+      "CHECKPOINT_ID": 1652,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_volume_group",
+      "CHECKPOINT_ID": 1671,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_volume_group",
+      "CHECKPOINT_ID": 1671,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "reserve_overprov_space",
+      "CHECKPOINT_ID": 1631,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "reserve_overprov_space",
+      "CHECKPOINT_ID": 1631,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_regulatory_images",
+      "CHECKPOINT_ID": 1700,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_regulatory_images",
+      "CHECKPOINT_ID": 1700,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "read_new_os_build_version",
+      "CHECKPOINT_ID": 1664,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "read_new_os_build_version",
+      "CHECKPOINT_ID": 1664,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_splat",
+      "CHECKPOINT_ID": 1702,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_splat",
+      "CHECKPOINT_ID": 1702,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "restored_fixup_system",
+      "CHECKPOINT_ID": 1670,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "restored_fixup_system",
+      "CHECKPOINT_ID": 1670,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_kernel_cache",
+      "CHECKPOINT_ID": 1576,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "write_ticket",
+      "CHECKPOINT_ID": 3587,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "write_ticket",
+      "CHECKPOINT_ID": 3587,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "install_kernel_cache",
+      "CHECKPOINT_ID": 1576,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "check_mounted",
+      "CHECKPOINT_ID": 1613,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fixup_var",
+      "CHECKPOINT_ID": 3840,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fixup_var",
+      "CHECKPOINT_ID": 3840,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_partition_mountpoints",
+      "CHECKPOINT_ID": 3844,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_partition_mountpoints",
+      "CHECKPOINT_ID": 3844,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_production_ucrt",
+      "CHECKPOINT_ID": 3849,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_production_ucrt",
+      "CHECKPOINT_ID": 3849,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_production_dcrt",
+      "CHECKPOINT_ID": 3856,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_production_dcrt",
+      "CHECKPOINT_ID": 3856,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "check_mounted",
+      "CHECKPOINT_ID": 1613,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "attest_restore",
+      "CHECKPOINT_ID": 1727,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "attest_restore",
+      "CHECKPOINT_ID": 1727,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_one_time_boot_command",
+      "CHECKPOINT_ID": 1694,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_one_time_boot_command",
+      "CHECKPOINT_ID": 1694,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_nvram_variables",
+      "CHECKPOINT_ID": 1595,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_nvram_variables",
+      "CHECKPOINT_ID": 1595,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "persistent_boot_args",
+      "CHECKPOINT_ID": 1593,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "persistent_boot_args",
+      "CHECKPOINT_ID": 1593,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_tdm",
+      "CHECKPOINT_ID": 1630,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_tdm",
+      "CHECKPOINT_ID": 1630,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "perform_restore_installing",
+      "CHECKPOINT_ID": 1659,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "recovery_os_restore",
+      "CHECKPOINT_ID": 5632,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fsck_recovery_volume",
+      "CHECKPOINT_ID": 5637,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "fsck_recovery_volume",
+      "CHECKPOINT_ID": 5637,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "mount_recovery_os_filesystem",
+      "CHECKPOINT_ID": 5638,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "mount_recovery_os_filesystem",
+      "CHECKPOINT_ID": 5638,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "macos_populate_system_recovery_os",
+      "CHECKPOINT_ID": 5652,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "macos_populate_system_recovery_os",
+      "CHECKPOINT_ID": 5652,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "recovery_os_restore",
+      "CHECKPOINT_ID": 5632,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "generate_boot_policies",
+      "CHECKPOINT_ID": 1682,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "preserve_source_boot_objects",
+      "CHECKPOINT_ID": 1677,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "preserve_source_boot_objects",
+      "CHECKPOINT_ID": 1677,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "macos_create_recovery_local_policy",
+      "CHECKPOINT_ID": 5654,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "macos_create_recovery_local_policy",
+      "CHECKPOINT_ID": 5654,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "generate_default_local_policy",
+      "CHECKPOINT_ID": 1678,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "generate_default_local_policy",
+      "CHECKPOINT_ID": 1678,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "populate_preboot_volume",
+      "CHECKPOINT_ID": 1672,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "populate_preboot_volume",
+      "CHECKPOINT_ID": 1672,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "populate_isc_preboot_volume",
+      "CHECKPOINT_ID": 1685,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "populate_isc_preboot_volume",
+      "CHECKPOINT_ID": 1685,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "populate_paired_recovery_volume",
+      "CHECKPOINT_ID": 1681,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "populate_paired_recovery_volume",
+      "CHECKPOINT_ID": 1681,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "bless_system_volume",
+      "CHECKPOINT_ID": 1673,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "bless_system_volume",
+      "CHECKPOINT_ID": 1673,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "generate_boot_policies",
+      "CHECKPOINT_ID": 1682,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_boot_command",
+      "CHECKPOINT_ID": 1599,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_boot_command",
+      "CHECKPOINT_ID": 1599,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_bootable",
+      "CHECKPOINT_ID": 1692,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_bootable",
+      "CHECKPOINT_ID": 1692,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "seal_system_volume",
+      "CHECKPOINT_ID": 1675,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "seal_system_volume",
+      "CHECKPOINT_ID": 1675,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_system_snapshot",
+      "CHECKPOINT_ID": 1641,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "create_system_snapshot",
+      "CHECKPOINT_ID": 1641,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_autoboot_delay",
+      "CHECKPOINT_ID": 1600,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "set_autoboot_delay",
+      "CHECKPOINT_ID": 1600,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "unmount_filesystems",
+      "CHECKPOINT_ID": 1602,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "unmount_filesystems",
+      "CHECKPOINT_ID": 1602,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_boot_command",
+      "CHECKPOINT_ID": 1660,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_boot_command",
+      "CHECKPOINT_ID": 1660,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_recovery_os_volume",
+      "CHECKPOINT_ID": 5651,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_recovery_os_volume",
+      "CHECKPOINT_ID": 5651,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_check_result",
+      "CHECKPOINT_ID": 1607,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_check_result",
+      "CHECKPOINT_ID": 1607,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_send_crash_logs",
+      "CHECKPOINT_ID": 1730,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": true,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_send_crash_logs",
+      "CHECKPOINT_ID": 1730,
+      "MsgType": "CheckpointMsg"
+    },
+    {
+      "CHECKPOINT_COMPLETE": false,
+      "CHECKPOINT_RESULT": 0,
+      "CHECKPOINT_NAME": "cleanup_send_final_status",
+      "CHECKPOINT_ID": 1608,
+      "MsgType": "CheckpointMsg"
+    }
+  ],
+  "NormalBootUserConfirmed": true,
+  "PcCleanup": "Certificate and key gone; waiting for USB disconnection to remove exact post-boot1905 package binding",
+  "BootEvidence": "User supplied two photos of macOS Bluetooth Setup Assistant and reported hearing Mac audio"
+}
