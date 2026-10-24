@@ -2,7 +2,7 @@ param([Parameter(Mandatory=$true)][ValidateRange(1,3)][int]$Replica)
 $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $PSScriptRoot
 $exe=Join-Path $root 'bin\windows-x64\restorekit.exe'
-$expectedHash='B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278'
+$expectedHash='48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D'
 if((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash -ine $expectedHash){throw 'Built main SHA256 differs from reviewed executable'}
 if(@(Get-CimInstance Win32_Process | Where-Object Name -eq 'restorekit.exe').Count){throw 'Another restorekit process exists; no check started'}
 if(@(Get-PnpDevice -PresentOnly -ErrorAction Stop | Where-Object InstanceId -match '^(USB|KIS)\\VID_05AC').Count){throw 'Apple USB/KIS device present; this no-hardware check is prohibited'}
@@ -44,3 +44,4 @@ try {
     if(Test-Path -LiteralPath $out){Get-Content -LiteralPath $out | Write-Output}
     if(Test-Path -LiteralPath $err){Get-Content -LiteralPath $err | Write-Output}
 }
+

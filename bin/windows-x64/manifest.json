@@ -1,9 +1,9 @@
 {
   "File": "restorekit.exe",
-  "SHA256": "B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278",
+  "SHA256": "48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D",
   "Bytes": 13707264,
   "Platform": "Windows x64 GNU",
-  "Version": "0.5.13 with bounded local patches",
+  "Version": "0.5.13 with actual-M4 zero-padding regression fix",
   "BuildResult": "exit0",
   "FixtureResult": "passed",
   "MacRestoreCompleted": false,
