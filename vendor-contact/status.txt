@@ -1,0 +1,26 @@
+DSSA — privat leverandørpakke
+24. oktober 2026
+
+Rent repo: https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore
+Eier/vedlikeholder: Stein Aune / DSSA.
+Privat. Bare eierkontoen har tilgang; ingen invitasjoner er sendt.
+Det gamle, mer detaljerte feilsøkingsarkivet er bevart privat separat.
+
+Dokumentert maskin og SSD:
+Mac mini M4 (2024), Mac16,10, med tom intern 2 TB «SSD expansion module for Mac mini M4» fra Expand Mac mini / Fyde Innovations LTD. Dette er en modul for Mac mini M4, ikke en vanlig M.2-modul. Fakturaen oppgir ikke NAND-produsent eller et separat produsentdelenummer.
+
+Dokumentert resultat:
+macOS Sequoia 15.6.1, bygg 24G90, installert direkte fra Windows. Siste restore tok 10 minutter og 55 sekunder etter klargjøring. Avslutningskode 0, «Restore Finished», 133 fullførte kontrollpunkter med resultat 0. Mac-en startet til oppsettsassistenten, og eieren begynte språk-/brukeroppsett. PC-oppryddingen er fullført og dokumentert.
+
+Det nye repoet inneholder en kort beskrivelse, tekniske rettelser, nødvendige kilder og lisenser, testinstruksjoner og kompakte bevis. Personlige maskin-ID-er, faktura, rå PC-logger, firmware, sertifikat, privat nøkkel og den gamle personlåste programfilen er utelatt.
+
+Den nye generelle kilden er en teknisk pilot. Den bruker eksplisitte målverdier fremfor eierens hardkodede maskin-ID-er. Det er ikke kjørt en fysisk restore med denne reviderte kilden. Den dokumenterte fysiske suksessen gjelder den opprinnelige B592-versjonen. Andre Mac-modeller, SSD-størrelser, Windows-PC-er og macOS-versjoner krever egne tester.
+
+Rene identitetstester bestod i tre skytetester: GCC og Clang med minne-/UB-sanitizere på Ubuntu, samt MSVC på Windows Server 2022. Hver kjørte samme uavhengige korpus på 60 000 syntetiske tilfeller. Dette simulerer ikke Mac-maskinvare.
+Testbevis: IDENTITET-SKYTESTER.json.
+
+Ren Windows-bygging er bestått: alle sju native avhengigheter er bygd fra kilde, og den endelige programfilen er lenket på nytt etter rettelsene. Seks mål-/stoppregeltester og fem ufarlige CLI-kontroller er bestått. Ingen fysisk USB/restore, driver-, sertifikat- eller sikkerhetsendring ble utført under denne valideringen. Programfilen beholdes lokalt; den er ikke publisert i delingsrepoet. Detaljer og kildehash: BYGG-OG-TESTER.json.
+
+E-postutkast: EPOST-TIL-EXPAND-MAC-MINI.txt. Du sender selv. Det ber leverandøren oppgi GitHub-brukernavnet sitt før tilgang gis. Ingen e-post er sendt.
+
+Ønsket om en 4 eller 8 TB-modul til en kommende Ultra-Mac er formulert som en mulig frivillig belønning eller et samarbeid. Ingen belønning er avtalt. Nøyaktig Mac-modell og kompatibel modul må avklares med leverandøren. Ingen offentliggjøring er godkjent.

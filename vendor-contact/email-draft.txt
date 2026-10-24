@@ -1,0 +1,23 @@
+Til: hi@expandmacmini.com
+Emne: Your 2 TB Mac mini M4 module restored from Windows — private DSSA evaluation
+
+Hi,
+
+I am a customer of yours, order #6530. I have successfully restored my Mac mini M4 (Mac16,10) directly from a Windows PC after installing your empty 2 TB “SSD expansion module for Mac mini M4”, supplied by Expand Mac mini / Fyde Innovations LTD.
+
+The restore installed macOS Sequoia 15.6.1, build 24G90. The Mac booted into Setup Assistant, and I was able to start the language and user setup. The final restore itself took 10 minutes 55 seconds, excluding preparation and the firmware download.
+
+I have documented the Windows USB driver transitions, restore identity handling and native connection fixes that made this work. The solution builds on the open-source RestoreKit project and retains its upstream credits and licenses. The successful case is documented separately from the newer generalized source, which still needs testing on additional hardware.
+
+I have prepared a clean, private repository under my DSSA name for your technical team:
+https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore
+
+I would like to share access only with your team at this stage. Please send me the GitHub username you would like me to invite. The link will remain inaccessible to you until access is arranged. Please keep the evaluation private for now.
+
+This could be useful to customers who have a Windows PC and need to restore a Mac mini after replacing its SSD. Would you be interested in reviewing it and discussing further testing or collaboration?
+
+If it is useful to you, would you consider a hardware contribution in recognition of the work? I am expecting an Ultra-based Mac and would be interested in a compatible 4 TB or 8 TB storage upgrade, if available. We would first need to confirm the exact Mac model and module compatibility. I understand that this would be entirely at your discretion.
+
+Best regards,
+Stein Aune
+DSSA

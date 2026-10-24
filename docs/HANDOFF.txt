@@ -14,4 +14,6 @@ Sluttlogg: outputs/Mac1905-driver/Final-attempt9-cleanup-20261024-213812/result.
 Detaljert restorebevis: outputs/Mac1905-driver/FORSOK9-RESTORE-RESULTAT.json
 Program SHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
 
-Neste arbeid: behold arkivet privat, lag kort leverandørunderlag i Stein Aune/DSSA sitt navn og klargjør en ren, generell Mac mini M4-utgave. Den personlåste, fysisk testede B592-versjonen bevares som referanse. Ikke start en ny restore på den ferdige Mac-en. Ingen publisering eller sending til leverandøren er godkjent.
+Leverandørunderlaget er klargjort i Stein Aune/DSSA sitt navn. Rent privat repo: https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore. Ingen leverandørtilgang eller invitasjoner er gitt. E-postutkast og status ligger i outputs/Leverandor; brukeren sender selv. Både fakturaen og nøyaktig 2 TB-modultype/leverandør er kontrollert. Mulig 4/8 TB-belønning er kun en forespørsel, og kompatibel Ultra-modell må avklares.
+
+Den rene generelle kilden er en teknisk pilot med eksplisitt målvalg; den er ikke fysisk restoretestet. Tre rene skytetester, full Windows-bygging, seks stoppregeltester og fem ufarlige CLI-kontroller er bestått. Sluttrapport: outputs/Leverandor/BYGG-OG-TESTER.json. Rent repo har to korte commits; siste er f72bc32. Den personlåste, fysisk testede B592-versjonen og detaljhistorien bevares i det gamle private arkivet. Ikke start en ny restore på den ferdige Mac-en. Ingen offentliggjøring eller sending til leverandøren fra agenten er godkjent.

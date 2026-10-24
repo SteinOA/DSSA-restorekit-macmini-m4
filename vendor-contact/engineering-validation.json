@@ -1,0 +1,188 @@
+{
+  "Scope": "Private DSSA engineering pilot; Windows x64 M4 Mac16,10; no physical restore of this candidate",
+  "BaseCommitAtValidation": "74012e2441baeece67e3ab6ec954ff6e19b86c8d",
+  "SourceWorkingTreeMayDifferFromBaseCommit": true,
+  "SourceSnapshotCombinedSHA256": "bd58a8d93ce2daa5c821c69a883dab54bb786c35b89452b27f6b4f85ef64b4c5",
+  "SourceFiles": {
+    "engine/crates/restorekit-cli/src/commands/mod.rs": {
+      "SHA256": "d0d2a1ce8cd4d802875f3738545a5cd6760371a299a9774db5b53fadd7991c9d",
+      "GitBlobOid": "6a13a54d01d7b161169deb48d98e1972d6175300"
+    },
+    "engine/crates/restorekit-cli/src/commands/restore.rs": {
+      "SHA256": "1fe490fd513e180b144d7b7e5a6068924397ff53108964c8b941c501e607130c",
+      "GitBlobOid": "57f231cd7d194aaa4f38fbe30938c83adc073da9"
+    },
+    "engine/crates/restorekit-cli/src/main.rs": {
+      "SHA256": "08a9dbdf898dd84f016505b2159ba94bdafeecb1407b31570c142825574ae87a",
+      "GitBlobOid": "41faa1069bd69441f7807684572ad7da6e88668f"
+    },
+    "engine/crates/restorekit-sys/build.rs": {
+      "SHA256": "7aa619221c53fb1c8c7e01694371e9857378f05a1776d8e926ae8362b63b50d0",
+      "GitBlobOid": "3c43fbd1d709e4be72609a32c5ef4b43f3590219"
+    },
+    "engine/crates/restorekit-sys/patches/idevicerestore/0008-fix-dfu-reconnect-event-predicates.patch": {
+      "SHA256": "6197044716941dbaa9ce196ec2304a8a5b6a758fa45a7ffcfcfc9fbb51d23a48",
+      "GitBlobOid": "ff443c9a56425f4e821cd3b1d0153f07f86fa6b0"
+    },
+    "engine/crates/restorekit-sys/src/lib.rs": {
+      "SHA256": "9e66b44520f656e9d778b71e47c43a9643531904cda561ad3ca1babb93a8febc",
+      "GitBlobOid": "e64d904873ca64671f6cfc890ae7678f5e8246dc"
+    },
+    "engine/crates/restorekit-sys/vendor/idevicerestore/src/common.h": {
+      "SHA256": "fc97ebe6cff5ec03903dc82694a7fa8360410dbce2425dbe8a1eee656da5468b",
+      "GitBlobOid": "7040cb1eea829819b7402f09758ae8afff20fe93"
+    },
+    "engine/crates/restorekit-sys/vendor/idevicerestore/src/idevicerestore.c": {
+      "SHA256": "2d2efb765057f0188b50cc41d6563a5ef1e3462b27635321daabd8337ea4636c",
+      "GitBlobOid": "d7d81b04f6b611523fac623184368a84cd1df3f2"
+    },
+    "engine/crates/restorekit-sys/vendor/idevicerestore/src/idevicerestore.h": {
+      "SHA256": "8058283ff73ff203becf6bcd3be9f8f13539115353c00ebf02ce42dc20eefe67",
+      "GitBlobOid": "1fc259325b9f69f94ce2f72465e141ddc8b4af04"
+    },
+    "engine/crates/restorekit-sys/vendor/libusbmuxd/src/libusbmuxd.c": {
+      "SHA256": "06092b1e5b565dbd6b30c37a0726b4d7b2eea504e2f6bf44ec1b1b19f39f44b0",
+      "GitBlobOid": "b6a77f126ed84f0452f981a7a26107047fb5a603"
+    },
+    "engine/crates/restorekit-sys/vendor/usbmuxd/src/restore_identity.h": {
+      "SHA256": "f04c0f044309481ef50405b6d7e116ffe2ba78f7e4c2205eea97653d13b189a0",
+      "GitBlobOid": "c4d473b0cbc84b7cdef4e01ad665fd384793ec60"
+    },
+    "engine/crates/restorekit-sys/vendor/usbmuxd/src/usb.c": {
+      "SHA256": "b6dbd2ab411bec40f09e535a7ed52bbe5c7d573777f15287a52db03c66835f8c",
+      "GitBlobOid": "27527604b2dca89db97e47f527f7a4d647466d83"
+    },
+    "engine/crates/restorekit-sys/vendor/usbmuxd/tests/restore_identity_fixtures.c": {
+      "SHA256": "182d0a7053a3b8daecc7f7f1a741b37f05e30fd2ec402e513a43e9ff4b73f0a1",
+      "GitBlobOid": "252b0b8fe79a16a8efd116f4360a95613eca85a6"
+    },
+    "engine/crates/restorekit/src/device.rs": {
+      "SHA256": "7c523a6492bbce6f9a3f0f89e76e131e8fb2a0e72fbbb6c78984c8fc1f88a75f",
+      "GitBlobOid": "d9fdd26152fe76505ebca1ce2fbf4558d1a75e3f"
+    },
+    "engine/crates/restorekit/src/lib.rs": {
+      "SHA256": "6ac53484db1a6bf0bc3cfc5a372c8c5dc06ec562f3fbf474b7b9b9f1da715740",
+      "GitBlobOid": "71090076d4c9b719de6fff7f59b5464d76cf849c"
+    },
+    "engine/crates/restorekit/src/restore.rs": {
+      "SHA256": "7e3ee60d89a859629fbd726c751c2f45dc4363ff3c83a32489dbc56967c5f525",
+      "GitBlobOid": "14167939c8e4240280d42582e4312f4a39a1265e"
+    },
+    "tests/target_identity_oracle.c": {
+      "SHA256": "c2d0ad11aa7bba2c08f1d979627522c3ebfaa036ec81e6d3feecee074e9bd044",
+      "GitBlobOid": "49ab8a63d5dddc32569a0e6b4f6c42eba3f8a643"
+    }
+  },
+  "RemovedGenericDriverSources": [
+    "engine/crates/restorekit/src/driver.rs",
+    "engine/crates/restorekit-cli/src/commands/setup_driver.rs"
+  ],
+  "Build": {
+    "Target": "x86_64-pc-windows-gnu",
+    "Profile": "release",
+    "Locked": true,
+    "Offline": true,
+    "Generator": "Ninja",
+    "FreshNativeDependencyCount": 7,
+    "FreshNativeDependencies": [
+      "libimobiledevice",
+      "libimobiledevice-glue",
+      "libirecovery",
+      "libplist",
+      "libtatsu",
+      "libusbmuxd",
+      "libzip"
+    ],
+    "CopiedPriorNativeDependencyArchives": false,
+    "FreshReleaseBuildExitCode": 0,
+    "FinalProductionRelinkAfterTestsExitCode": 0,
+    "FinalRelinkLog": "work/candidate-build-final.log",
+    "InitialGeneratorFailureExitCode": 101,
+    "InitialGeneratorFailure": "MinGW Makefiles tool unavailable; existing Ninja selected",
+    "InitialGuardHarnessLinkExitCode": 101,
+    "HarnessLinkCorrection": "Explicit shell32 native system library; subsequent guard link passed"
+  },
+  "NativeWindowsBackend": {
+    "HostAlias": "x86_64-w64-mingw32",
+    "ArchiveHasDeviceIoControlImports": true,
+    "ArchiveHasSetupDiImports": true,
+    "ArchiveHasLibusbImports": false
+  },
+  "PrivateNativeMuxEndpoint": "127.0.0.1:27016; compiled connector preserved, no C getenv dependency",
+  "PatchSequence": {
+    "Count": 8,
+    "AllExitCodes": 0,
+    "FuzzRequired": false
+  },
+  "PureParser": {
+    "FixtureCompileExitCode": 0,
+    "FixtureRunExitCode": 0,
+    "OracleCompileExitCode": 0,
+    "OracleRunExitCode": 0,
+    "OracleCases": 60000,
+    "Accepted": 12394,
+    "Rejected": 47606,
+    "SyntheticTargets": 2
+  },
+  "GuardTests": {
+    "Command": "cargo test --release --locked --target x86_64-pc-windows-gnu -p restorekit -p restorekit-cli --offline dssa_",
+    "ExitCode": 0,
+    "Passed": 6,
+    "Failed": 0,
+    "Names": [
+      "restore::dssa_target_tests::native_start_rejects_unarmed_or_identical_targets_before_discovery",
+      "restore::dssa_target_tests::portdfu_policy_rejects_cross_stage_and_wrong_model",
+      "restore::dssa_target_tests::rejects_missing_or_zero_target_before_private_mux_start",
+      "restore::dssa_target_tests::rejects_zero_initial_identity_before_private_mux_start",
+      "commands::restore::dssa_cli_target_tests::refuses_implicit_firmware_before_device_discovery",
+      "commands::restore::dssa_cli_target_tests::refuses_unselected_targets_before_device_discovery"
+    ],
+    "NativeRegressionSafety": "No IPSW set; existing missing-IPSW check also prevents discovery if target guard regresses; exact target error asserted"
+  },
+  "BenignCliChecks": [
+    {
+      "Name": "top_help",
+      "ExitCode": 0,
+      "Passed": true
+    },
+    {
+      "Name": "restore_help",
+      "ExitCode": 0,
+      "Passed": true
+    },
+    {
+      "Name": "disabled_driver",
+      "ExitCode": 1,
+      "Passed": true
+    },
+    {
+      "Name": "missing_targets",
+      "ExitCode": 1,
+      "Passed": true
+    },
+    {
+      "Name": "missing_local_ipsw",
+      "ExitCode": 1,
+      "Passed": true
+    }
+  ],
+  "ProductionBinary": {
+    "Path": "engine/target/x86_64-pc-windows-gnu/release/restorekit.exe",
+    "SHA256": "b9f56e897512fe3cf4aece932a10b9d5bef99754b7e9864daa7b6f262577f715",
+    "Bytes": 13627392,
+    "RelinkedAfterFinalSourceAndTests": true,
+    "DistributedByThisTask": false
+  },
+  "Limits": [
+    "Operator must independently know and verify controller/SoC identity pair",
+    "F014-only initial stage; CPID8132 BDID2A; distinct nonzero identities",
+    "Explicit local IPSW required; prior bespoke physical proof is only 15.6.1/24G90",
+    "Generic driver installer/watchers removed; separate temporary PID1905 workflow required",
+    "Private engineering pilot, not a tested turnkey solution for arbitrary Windows PCs",
+    "Build warnings remain; not claimed warning-free"
+  ],
+  "HardwareUsbCallsDuringValidation": 0,
+  "PhysicalRestoreAttempts": 0,
+  "DriverTrustOrSecurityChanges": 0,
+  "OriginalKnownGoodSourceOrB592Modified": false
+}
