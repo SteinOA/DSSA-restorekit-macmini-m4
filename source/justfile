@@ -1,0 +1,162 @@
+# Show available recipes
+default:
+    @just --list
+
+# Install dev dependencies: JS workspace + the firmware's Rust toolchain
+install:
+    pnpm install
+    rustup target add thumbv8m.main-none-eabihf
+    rustup component add llvm-tools
+    cargo install flip-link cargo-binutils
+    # picotool is optional: `just fw-flash-full` prefers it for verified
+    # flashing over PICOBOOT, but falls back to copying the UF2 to the bootrom
+    # drive. `brew install picotool` (macOS); not packaged before Ubuntu 25.04.
+
+# Print a bag label on the DYMO LabelWriter (kind: bag|start; see -h for flags)
+label *args:
+    uv run scripts/labels.py {{args}}
+
+# Release the software (bump + tag via CI; kind: patch|minor|major)
+release kind="patch": (_dispatch "bump-release.yml" kind)
+
+# Release the dongle firmware (bump + tag via CI; kind: patch|minor|major)
+release-fw kind="patch": (_dispatch "bump-release-fw.yml" kind)
+
+# Dispatch a bump workflow and follow the run it starts. The bump then pushes
+# a tag, which kicks off the corresponding release workflow.
+_dispatch workflow kind:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    case "{{kind}}" in
+        patch|minor|major) ;;
+        *) echo "kind must be patch, minor, or major (got '{{kind}}')" >&2; exit 1 ;;
+    esac
+    gh workflow run {{workflow}} -f version_type={{kind}}
+    echo "dispatched {{workflow}} ({{kind}}); waiting for the run to register..."
+    sleep 5
+    run=$(gh run list --workflow {{workflow}} --limit 1 --json databaseId --jq '.[0].databaseId')
+    gh run watch "$run" --exit-status
+    echo "bump done — the pushed tag now triggers the release workflow:"
+    gh run list --limit 3
+
+# On Windows the vendored C stack is built with autotools, which can't target
+# MSVC: cargo needs the GNU toolchain, with MinGW's binutils and the MSYS2
+# tools on PATH (mirrors apps/desktop/scripts/tauri.mjs and ci.yml).
+msys2_root := env("MSYS2_ROOT", "C:/msys64")
+win_cargo_env := "PATH=\"" + msys2_root + "/mingw64/bin:" + msys2_root + "/usr/bin:$PATH\""
+
+# Run the CLI (dev build), passing arguments through
+[unix]
+cli *args:
+    cargo run -p restorekit-cli -- {{args}}
+
+# Run the CLI (dev build), passing arguments through
+[windows]
+cli *args:
+    {{win_cargo_env}} cargo run --target x86_64-pc-windows-gnu -p restorekit-cli -- {{args}}
+
+# Build the CLI (release)
+[unix]
+cli-build:
+    cargo build --release -p restorekit-cli
+
+# Build the CLI (release)
+[windows]
+cli-build:
+    {{win_cargo_env}} cargo build --release --target x86_64-pc-windows-gnu -p restorekit-cli
+
+# Run the desktop app with hot reload
+app-dev:
+    cd apps/desktop && pnpm tauri dev
+
+# Build the desktop app (unsigned; see app-build-signed)
+app-build:
+    cd apps/desktop && pnpm tauri build
+
+# Build a signed + notarized RestoreKit.app (config from apps/desktop/.env)
+app-build-signed:
+    cd apps/desktop && pnpm build:signed
+
+# Build the RP2354A (RP2350) dongle firmware + bootloader (prereqs: just install)
+fw-build:
+    cd crates/dongle-lite-fw && cargo build --release
+    cd crates/dongle-lite-boot && cargo build --release
+
+# Update a dongle's firmware over USB (production path: no bootrom, no drive).
+# The .bin is the raw ACTIVE-slot image; on RP2350 there's no .boot2 to strip.
+fw-update: fw-build
+    cd crates/dongle-lite-fw && cargo objcopy --release -- -O binary target/dongle-lite-fw.bin
+    cargo run -q -p restorekit-cli -- dongle update --file crates/dongle-lite-fw/target/dongle-lite-fw.bin
+
+# Flash bootloader + app over the RP2350 bootrom (factory / first flash)
+fw-flash-full: fw-build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    {{bootsel_kick}}
+    # RP2350 UF2s: objcopy each image to a raw .bin at its flash offset, then
+    # stamp the rp2350-arm-s family id (elf2uf2-rs only knows RP2040, and
+    # picotool's ELF path trips over the app's zero-fill BSS). Same converter
+    # release-fw.yml uses, so the bench flashes what CI publishes.
+    boot=crates/dongle-lite-boot/target/dongle-lite-boot
+    fw=crates/dongle-lite-fw/target/dongle-lite-fw
+    ( cd crates/dongle-lite-boot && cargo objcopy --release -- -O binary target/dongle-lite-boot.bin )
+    ( cd crates/dongle-lite-fw   && cargo objcopy --release -- -O binary target/dongle-lite-fw.bin )
+    node scripts/bin2uf2.mjs --base 0x10000000 --family rp2350-arm-s "$boot.bin" "$boot.uf2"
+    node scripts/bin2uf2.mjs --base 0x10007000 --family rp2350-arm-s "$fw.bin" "$fw.uf2"
+    # --fill wipes the bootloader state sector (see dongle-lite-boot/memory.x):
+    # leftover bytes there from older firmware can read as a bogus swap state.
+    node scripts/merge-uf2.mjs --fill 0x10006000:4096 \
+        "$boot.uf2" "$fw.uf2" \
+        crates/dongle-lite-fw/target/dongle-lite-full.uf2
+    # Prefer picotool: it writes over PICOBOOT and verifies the readback,
+    # unlike the drive copy, which macOS corrupts often enough to matter
+    # (reordered writes to the FAT bootrom volume).
+    if command -v picotool > /dev/null; then
+        ( {{wait_rpi_rp2}} ) > /dev/null
+        picotool load -v -x crates/dongle-lite-fw/target/dongle-lite-full.uf2
+    else
+        echo "note: install picotool for verified flashing; falling back to the drive copy" >&2
+        mount=$({{wait_rpi_rp2}})
+        # The bootrom reboots the instant the last block lands, so on macOS cp
+        # can report an I/O error after the flash already completed — treat
+        # the drive vanishing as success.
+        if ! cp crates/dongle-lite-fw/target/dongle-lite-full.uf2 "$mount/" 2>/dev/null; then
+            sleep 2
+            if [ -d "$mount" ]; then
+                echo "error: copying the UF2 failed and the board did not reboot" >&2
+                exit 1
+            fi
+        fi
+    fi
+    echo "flashed; waiting for the dongle to enumerate..."
+    for _ in $(seq 1 20); do
+        sleep 0.5
+        if cargo run -q -p restorekit-cli -- dongle list --json 2>/dev/null | grep -q serial; then
+            cargo run -q -p restorekit-cli -- dongle list
+            exit 0
+        fi
+    done
+    echo "the dongle did not come back within 10s — check the board" >&2
+    exit 1
+
+# Shell snippet: reboot a running dongle into the RP2350 bootrom over its
+# vendor USB interface; on failure explain the manual paths and keep going.
+bootsel_kick := '''
+    if ! cargo run -q -p restorekit-cli -- dongle bootsel; then
+        echo "note: couldn't reboot the dongle into its bootloader over USB." >&2
+        echo "      if it isn't already in BOOTSEL: type 'bootsel' on its serial console" >&2
+        echo "      (CDC0), or replug it with the BOOTSEL button held. waiting for the drive..." >&2
+    fi
+'''
+
+# Shell snippet: wait for the RP2350 bootrom drive, print its mount point.
+wait_rpi_rp2 := '''
+    for _ in $(seq 1 30); do
+        for m in /Volumes/RP2350 "/run/media/$USER/RP2350" "/media/$USER/RP2350"; do
+            if [ -d "$m" ]; then echo "$m"; exit 0; fi
+        done
+        sleep 0.5
+    done
+    echo "RP2350 drive never appeared; is the board in BOOTSEL?" >&2
+    exit 1
+'''

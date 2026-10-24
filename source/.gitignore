@@ -1,0 +1,12 @@
+/target
+dist/
+# CI staging dirs for prebuilt binaries and generated shell completions
+# consumed by goreleaser; must be ignored or goreleaser's dirty-state check
+# fails the release.
+/artifacts/
+/completions/
+*.ipsw
+.DS_Store
+# App Store Connect API keys — never commit.
+*.p8
+node_modules/

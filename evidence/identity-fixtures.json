@@ -1,0 +1,26 @@
+{
+  "Time": "2026-10-24T05:26:32.0825591+02:00",
+  "Source": "work/restorekit-source/crates/restorekit-sys/vendor/usbmuxd/tests/restore_identity_fixtures.c",
+  "Compiler": "work/msys64/ucrt64/bin/gcc.exe",
+  "Flags": "-std=c11 -Wall -Wextra -Werror -O2",
+  "CompileExit": 0,
+  "RunExit": 0,
+  "Output": "restore identity fixtures passed (pure data; no USB access)",
+  "HardwareAccess": false,
+  "Coverage": [
+    "Exact24and25characteridentity",
+    "Hexcase",
+    "WrongECID",
+    "Wrongchip",
+    "Malformedseparator",
+    "Trailingbytes",
+    "Failedtransfer",
+    "Shortinvaliddescriptor",
+    "NonASCIIandNUL",
+    "Smalloutputbuffer",
+    "LANGID0409",
+    "LANGID0414",
+    "Multipleadvertisedlanguages",
+    "Zeroandmalformedlanguageentries"
+  ]
+}

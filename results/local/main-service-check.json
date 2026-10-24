@@ -1,0 +1,14 @@
+{
+  "Time": "2026-10-24T05:33:21.3502903+02:00",
+  "SHA256": "B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278",
+  "ExitCode": 0,
+  "Seconds": 2.98,
+  "NoAppleDevicePresentAtStart": true,
+  "AppleListenerUnchanged": true,
+  "PrivateListenerGone": true,
+  "Scope": "Local service startup, ListDevices protocol and teardown only; does not prove transport to Mac",
+  "DriverChanged": false,
+  "CertificateChanged": false,
+  "FirmwareUploaded": false,
+  "DataErased": false
+}

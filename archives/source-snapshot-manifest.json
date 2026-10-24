@@ -1,0 +1,8 @@
+{
+  "Archive": "archives/source-snapshot.zip",
+  "Bytes": 25808167,
+  "SHA256": "B49BBEC79281B4D4E74A903517DAB78021F588D1E71BB2D99A9245F847778FDB",
+  "SourceFiles": 2133,
+  "SourceManifest": "source-manifest.json",
+  "Purpose": "Exact source bytes unaffected by vendor Git checkout line-ending rules"
+}

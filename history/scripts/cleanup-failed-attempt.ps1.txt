@@ -1,0 +1,3 @@
+$ErrorActionPreference='Stop'
+$p=Get-CimInstance Win32_Process -Filter 'ProcessId=94764'
+if ($p -and $p.Name -eq 'restorekit.exe' -and $p.CommandLine -match '--verbose restore' -and $p.CommandLine -match '24G90_Restore.ipsw') { Stop-Process -Id 94764 -Force; 'Stopped failed restore PID94764' | Set-Content (Join-Path $PSScriptRoot 'failed-process-cleanup.log') }

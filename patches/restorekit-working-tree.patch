@@ -1,0 +1,522 @@
+diff --git a/crates/restorekit-cli/src/commands/restore.rs b/crates/restorekit-cli/src/commands/restore.rs
+index 9031a5d..bd02640 100644
+--- a/crates/restorekit-cli/src/commands/restore.rs
++++ b/crates/restorekit-cli/src/commands/restore.rs
+@@ -188,12 +188,11 @@ fn restore_device(device: &Device, opts: Opts) -> Result<()> {
+     }
+ 
+     say(json, "Starting restore. Do not disconnect the target.");
+-    // The restore-mode USB interface needs our WinUSB forced onto it, which is
+-    // done by an elevated watcher the restore spawns — warn about the UAC prompt.
++    // Prepared drivers are selected before this single Windows restore.
+     #[cfg(target_os = "windows")]
+     say(
+         json,
+-        "  A Windows (UAC) prompt will appear to set up restore-mode USB access — approve it.",
++        "  Using the prepared USB drivers; automatic driver changes and retries are disabled.",
+     );
+     // In verbose mode idevicerestore's log streams to the terminal, so hide the
+     // progress bar to avoid interleaving with it.
+diff --git a/crates/restorekit-cli/src/main.rs b/crates/restorekit-cli/src/main.rs
+index 2342e4c..5592c76 100644
+--- a/crates/restorekit-cli/src/main.rs
++++ b/crates/restorekit-cli/src/main.rs
+@@ -25,6 +25,11 @@ struct Cli {
+ 
+ #[derive(Subcommand)]
+ enum Command {
++    /// Check private Windows USB service startup/protocol/teardown. May initialize
++    /// only the authorized PID1905 USB transport if present; never uploads
++    /// firmware, erases data, or enters DFU. Run as a separate process.
++    #[cfg(target_os = "windows")]
++    CheckUsb,
+     /// List every connected Apple device, with its mode and ECID.
+     List {
+         /// Re-render every 2 seconds until interrupted (NDJSON when --json).
+@@ -362,6 +367,14 @@ fn main() {
+             HistoryAction::Clear => commands::history::clear(),
+         },
+         #[cfg(target_os = "windows")]
++        Command::CheckUsb => restorekit::restore::probe_private_mux(&mut |_| {}).map(|()| {
++            if cli.json {
++                println!("{}", serde_json::json!({"event":"usb_check_passed","endpoint":"127.0.0.1:27016","firmware_uploaded":false,"data_erased":false}));
++            } else {
++                println!("Private USB service check passed (127.0.0.1:27016); no firmware upload or erase.");
++            }
++        }),
++        #[cfg(target_os = "windows")]
+         Command::SetupDriver {
+             elevated,
+             result_file,
+diff --git a/crates/restorekit-sys/build.rs b/crates/restorekit-sys/build.rs
+index f2383c3..475082a 100644
+--- a/crates/restorekit-sys/build.rs
++++ b/crates/restorekit-sys/build.rs
+@@ -200,7 +200,7 @@ fn ensure_submodules(manifest: &Path, vendor: &Path) {
+ /// (e.g. `progtest.m4`), which aborts autoreconf. Forcing the correct POSIX
+ /// dirs sidesteps the Win32↔POSIX round-trip. `/usr/share/aclocal` holds the
+ /// automake/gettext macros; `/mingw64/share/aclocal` holds `pkg.m4` et al.
+-const MSYS_ACLOCAL_PATH: &str = "/usr/share/aclocal:/mingw64/share/aclocal";
++const MSYS_ACLOCAL_PATH: &str = "/usr/share/aclocal:/ucrt64/share/aclocal";
+ 
+ /// Run autogen + configure + make + make install into the staging prefix.
+ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
+@@ -280,6 +280,15 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
+     }
+     run(&mut configure, &format!("{name} configure"));
+     quote_libtool_globs(&build_dir.join("libtool"));
++    if deps.windows && name == "libimobiledevice" {
++        let path = build_dir.join("libtool");
++        let script = std::fs::read_to_string(&path).unwrap();
++        // The single library in src/ can otherwise extract convenience
++        // archives beyond Windows MAX_PATH in this workspace.
++        std::fs::write(path, script.replace(
++            "gentop=$output_objdir/${outputname}x", "gentop=$output_objdir/ltx"
++        )).unwrap();
++    }
+ 
+     let jobs = env::var("NUM_JOBS").unwrap_or_else(|_| "4".into());
+     let mut make = Command::new("make");
+@@ -359,6 +368,9 @@ fn build_libzip(src: &Path, deps: &Deps) {
+     if let Some(inc) = &deps.zlib_include {
+         cfg.define("ZLIB_INCLUDE_DIR", inc);
+     }
++    if let Some(short_dir) = env::var_os("RESTOREKIT_ZIP_BUILD_DIR") {
++        cfg.out_dir(short_dir);
++    }
+     let dst = cfg.build();
+     // cmake crate installs into <dst>; mirror into our prefix if separate.
+     let _ = dst;
+@@ -504,6 +516,7 @@ fn compile_idevicerestore(src: &Path, deps: &Deps) {
+ /// into a static archive so restorekit can run an in-process usbmuxd on Linux.
+ fn compile_usbmuxd(src: &Path, deps: &Deps) {
+     let src_dir = src.join("src");
++    println!("cargo:rerun-if-changed={}", src_dir.join("restore_identity.h").display());
+     let mut build = cc::Build::new();
+     build
+         .include(&src_dir)
+@@ -568,6 +581,9 @@ fn compile_usbmuxd(src: &Path, deps: &Deps) {
+             if skip.contains(&name) {
+                 continue;
+             }
++            // Explicit tracking is needed once this build script emits other
++            // rerun-if-changed paths; otherwise vendored fixes can stay cached.
++            println!("cargo:rerun-if-changed={}", path.display());
+             build.file(&path);
+             count += 1;
+         }
+diff --git a/crates/restorekit-sys/csrc/usbmuxd_server.c b/crates/restorekit-sys/csrc/usbmuxd_server.c
+index a970744..30732bd 100644
+--- a/crates/restorekit-sys/csrc/usbmuxd_server.c
++++ b/crates/restorekit-sys/csrc/usbmuxd_server.c
+@@ -21,9 +21,8 @@
+ #ifdef _WIN32
+ #include <winsock2.h>
+ #include <ws2tcpip.h>
+-/* usbmuxd reaches restore mode over usbmux; libusbmuxd on Windows defaults to
+- * this loopback address, so listening here needs no client-side config. */
+-#define RK_MUX_PORT 27015
++/* Private restore-mode mux; Rust sets/restores libusbmuxd's client endpoint. */
++#define RK_MUX_PORT 27016
+ #else
+ #include <fcntl.h>
+ #include <poll.h>
+@@ -79,7 +78,10 @@ static int create_loopback_socket(void)
+     }
+ 
+     int one = 1;
+-    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof(one));
++    if (setsockopt(fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char *)&one, sizeof(one)) != 0) {
++        closesocket(fd);
++        return -1;
++    }
+ 
+     struct sockaddr_in addr;
+     memset(&addr, 0, sizeof(addr));
+@@ -152,10 +154,18 @@ static int create_unix_socket(const char *path)
+ 
+ /* ── public API called from Rust ─────────────────────────────────── */
+ 
++void restorekit_usbmuxd_cleanup(void);
++
+ int restorekit_usbmuxd_start(const char *sock_path)
+ {
+     int res;
+ 
++#ifdef _WIN32
++    /* Never bind Apple's system endpoint or accept arbitrary inherited input. */
++    if (!sock_path || strcmp(sock_path, "127.0.0.1:27016") != 0)
++        return -1;
++#endif
++
+     snprintf(socket_path_buf, sizeof(socket_path_buf), "%s", sock_path);
+ 
+     should_exit    = 0;
+@@ -177,20 +187,24 @@ int restorekit_usbmuxd_start(const char *sock_path)
+ 
+     usbmuxd_log(LL_NOTICE, "restorekit: initializing embedded usbmuxd");
+ 
+-    res = usb_init();
+-    if (res < 0) {
+-        usbmuxd_log(LL_FATAL, "usb_init failed (%d)", res);
+-        return -1;
+-    }
+-    usbmuxd_log(LL_NOTICE, "restorekit: USB init found %d device(s)", res);
+-
+ #ifdef _WIN32
+     listenfd = create_loopback_socket();
+ #else
+     listenfd = create_unix_socket(socket_path_buf);
+ #endif
+-    if (listenfd < 0)
++    if (listenfd < 0) {
++        restorekit_usbmuxd_cleanup();
+         return -1;
++    }
++
++    /* Reserve the private socket before discovery can touch any USB device. */
++    res = usb_init();
++    if (res < 0) {
++        usbmuxd_log(LL_FATAL, "usb_init failed (%d)", res);
++        restorekit_usbmuxd_cleanup();
++        return -1;
++    }
++    usbmuxd_log(LL_NOTICE, "restorekit: USB init found %d device(s)", res);
+ 
+     usbmuxd_log(LL_NOTICE, "restorekit: embedded usbmuxd listening on %s", socket_path_buf);
+     return 0;
+diff --git a/crates/restorekit-sys/vendor/usbmuxd b/crates/restorekit-sys/vendor/usbmuxd
+--- a/crates/restorekit-sys/vendor/usbmuxd
++++ b/crates/restorekit-sys/vendor/usbmuxd
+@@ -1 +1 @@
+-Subproject commit 3ded00c9985a5108cfc7591a309f9a23d57a8cba
++Subproject commit 3ded00c9985a5108cfc7591a309f9a23d57a8cba-dirty
+diff --git a/crates/restorekit/src/device.rs b/crates/restorekit/src/device.rs
+index 5e86b7c..643040b 100644
+--- a/crates/restorekit/src/device.rs
++++ b/crates/restorekit/src/device.rs
+@@ -595,7 +595,8 @@ pub enum UsbMode {
+ impl UsbMode {
+     fn from_pid(pid: u16) -> UsbMode {
+         match pid {
+-            0x1227 => UsbMode::Dfu,
++            // libidevicerestore handles Port DFU -> DFU before restoring.
++            0x1227 | 0xf014 => UsbMode::Dfu,
+             0x1280 | 0x1281 => UsbMode::Recovery,
+             0x1222 => UsbMode::Wtf,
+             0x1338 | 0x1339 => UsbMode::Restore,
+@@ -861,10 +862,26 @@ fn ecid_from_usb_serial(serial: &str) -> Option<u64> {
+     }
+ }
+ 
++// Port DFU encodes the SoC CPID and board ID in the controller's 64-bit
++// BDID. Match libirecovery's irecv_devices_get_device_by_client decoding.
++fn parse_port_dfu_serial(serial: &str) -> Option<(u16, u8, u64, Option<String>, Option<String>)> {
++    let field = |key: &str| serial.split_whitespace().find_map(|f| {
++        let (k, v) = f.split_once(':')?;
++        (k == key).then_some(v)
++    });
++    let packed = u64::from_str_radix(field("BDID")?, 16).ok()?;
++    let ecid = u64::from_str_radix(field("ECID")?, 16).ok()?;
++    Some((((packed >> 8) & 0xffff) as u16, ((packed >> 24) & 0xff) as u8, ecid, None, None))
++}
++
+ pub(crate) fn from_usb(info: &nusb::DeviceInfo) -> Device {
+     let serial = info.serial_number().unwrap_or("").to_string();
+     let mode = UsbMode::from_pid(info.product_id());
+-    let parsed = parse_serial(&serial);
++    let parsed = if info.product_id() == 0xf014 {
++        parse_port_dfu_serial(&serial)
++    } else {
++        parse_serial(&serial)
++    };
+     let ecid = parsed
+         .as_ref()
+         .map(|(_, _, ecid, _, _)| *ecid)
+@@ -1249,6 +1266,18 @@ pub fn wait_where(timeout: Duration, mut pred: impl FnMut(&Device) -> bool) -> R
+ mod tests {
+     use super::*;
+ 
++    #[test]
++    fn port_dfu_m4_mini_identity() {
++        let (cpid, bdid, ecid, _, _) = parse_port_dfu_serial(
++            "SDOM:01 CPID:0022 BDID:000000002A813200 ECID:165715DA257CBD11 CPFM:03"
++        ).unwrap();
++        assert_eq!((cpid, bdid), (0x8132, 0x2a));
++        assert_eq!(ecid, 0x165715da257cbd11);
++        assert_eq!(lookup(cpid, bdid).unwrap().identifier, "Mac16,10");
++        assert_eq!(UsbMode::from_pid(0xf014), UsbMode::Dfu);
++        assert!(parse_port_dfu_serial("BDID:invalid ECID:123").is_none());
++    }
++
+     #[test]
+     fn lookup_m1_air() {
+         let m = lookup(0x8103, 0x26).unwrap();
+diff --git a/crates/restorekit/src/firmware/cache.rs b/crates/restorekit/src/firmware/cache.rs
+index 49ef6db..5817b21 100644
+--- a/crates/restorekit/src/firmware/cache.rs
++++ b/crates/restorekit/src/firmware/cache.rs
+@@ -133,7 +133,8 @@ pub(super) fn verify(path: &Path, fw: &Firmware) -> Result<()> {
+ fn hash_file<D: Digest>(path: &Path) -> Result<String> {
+     let mut file = std::fs::File::open(path)?;
+     let mut hasher = D::new();
+-    let mut buf = [0u8; 1 << 20];
++    // A 1 MiB stack buffer can exhaust the Windows main-thread stack.
++    let mut buf = vec![0u8; 1 << 20];
+     loop {
+         let n = file.read(&mut buf)?;
+         if n == 0 {
+diff --git a/crates/restorekit/src/firmware/download.rs b/crates/restorekit/src/firmware/download.rs
+index 92f88e2..a0064b6 100644
+--- a/crates/restorekit/src/firmware/download.rs
++++ b/crates/restorekit/src/firmware/download.rs
+@@ -140,7 +140,7 @@ fn download_stream(partial: &Path, fw: &Firmware, progress: ProgressFn) -> Resul
+         .truncate(!resuming && downloaded == 0)
+         .open(partial)?;
+ 
+-    let mut buf = [0u8; 1 << 20];
++    let mut buf = vec![0u8; 1 << 20];
+     let mut got = 0u64;
+     loop {
+         let n = resp
+diff --git a/crates/restorekit/src/restore.rs b/crates/restorekit/src/restore.rs
+index 6035120..b9a9b36 100644
+--- a/crates/restorekit/src/restore.rs
++++ b/crates/restorekit/src/restore.rs
+@@ -212,11 +212,66 @@ fn is_transient_failure(err: &Error) -> bool {
+             .any(|m| sys::error_tail(500).contains(m))
+ }
+ 
++#[cfg(target_os = "windows")]
++pub(crate) fn probe_usbmux_endpoint(port: u16) -> Result<()> {
++    use std::io::{Read, Write};
++    use std::net::{Ipv4Addr, SocketAddr, TcpStream};
++    use std::time::Duration;
++
++    let probe = || -> std::result::Result<(), String> {
++        if port != 27016 { return Err("only private loopback port27016 may be probed".into()); }
++        let address = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
++        let timeout = Duration::from_secs(3);
++        let mut stream = TcpStream::connect_timeout(&address, timeout)
++            .map_err(|e| format!("cannot connect to {address}: {e}"))?;
++        stream.set_read_timeout(Some(timeout)).map_err(|e| e.to_string())?;
++        stream.set_write_timeout(Some(timeout)).map_err(|e| e.to_string())?;
++        // usbmux protocol v1, plist message, tag 1. ListDevices is read-only;
++        // an empty list is valid while the target is still in DFU.
++        let request = br#"<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>MessageType</key><string>ListDevices</string><key>ClientVersionString</key><string>restorekit</string><key>ProgName</key><string>restorekit</string><key>kLibUSBMuxVersion</key><integer>3</integer></dict></plist>"#;
++        let mut packet = Vec::with_capacity(16 + request.len());
++        for word in [(16 + request.len()) as u32, 1, 8, 1] {
++            packet.extend_from_slice(&word.to_le_bytes());
++        }
++        packet.extend_from_slice(request);
++        stream.write_all(&packet).map_err(|e| e.to_string())?;
++        let mut header = [0u8; 16];
++        stream.read_exact(&mut header).map_err(|e| e.to_string())?;
++        let word = |offset| u32::from_le_bytes(header[offset..offset + 4].try_into().unwrap());
++        let size = word(0) as usize;
++        if !(16..=1_048_576).contains(&size) || word(4) != 1 || word(8) != 8 || word(12) != 1 {
++            return Err("invalid usbmux ListDevices response header".into());
++        }
++        let mut payload = vec![0; size - 16];
++        stream.read_exact(&mut payload).map_err(|e| e.to_string())?;
++        let reply = plist::Value::from_reader(std::io::Cursor::new(payload))
++            .map_err(|e| format!("invalid usbmux response plist: {e}"))?;
++        if reply.as_dictionary().and_then(|d| d.get("DeviceList")).and_then(plist::Value::as_array).is_none() {
++            return Err("usbmux service did not return a DeviceList".into());
++        }
++        Ok(())
++    };
++    probe().map_err(|message| Error::UsbmuxdFailed(format!(
++        "private Windows usbmux protocol probe failed: {message}"
++    )))
++}
++
++/// Check private mux startup, read-only ListDevices protocol, and guard teardown.
++/// This does not erase or upload firmware. USB discovery can initialize the
++/// authorized PID1905 device and change its mode/configuration after serial validation.
++/// Run in a separate short-lived process: the Windows mux is single-use.
++#[cfg(target_os = "windows")]
++pub fn probe_private_mux(progress: ProgressFn) -> Result<()> {
++    let _lock = RESTORE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
++    let _mux = crate::usbmuxd::UsbmuxdGuard::start(progress)?;
++    probe_usbmux_endpoint(27016)
++}
++
+ /// Run a restore against the DFU device with the given ECID, streaming progress.
+ ///
+ /// This links libidevicerestore statically; there is no external binary.
+-/// Transient transport failures (dropped USB writes) are retried a bounded
+-/// number of times, re-running the restore from device detection.
++/// Windows runs one attempt using native Apple DFU/KIS and a private final-stage mux. Other hosts
++/// can retry transient transport failures from device detection.
+ pub fn restore(
+     ipsw: &Path,
+     ecid: u64,
+@@ -227,23 +282,37 @@ pub fn restore(
+ ) -> Result<Obliteration> {
+     let _guard = RESTORE_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+ 
+-    // On Linux and Windows, start the embedded usbmuxd server so idevicerestore
++    // On Linux, start the embedded usbmuxd server so idevicerestore
+     // can reach USB devices (restore mode) without an external daemon — unless a
+     // parent process already started a shared one (parallel restores), which we
+     // then reuse via the inherited USBMUXD_SOCKET_ADDRESS.
+-    #[cfg(any(target_os = "linux", target_os = "windows"))]
++    #[cfg(target_os = "linux")]
+     let _usbmuxd = if std::env::var_os("RESTOREKIT_SHARED_USBMUXD").is_some() {
+         None
+     } else {
+         Some(crate::usbmuxd::UsbmuxdGuard::start(progress)?)
+     };
+ 
+-    // On Windows the Mac's restore-mode interface is claimed by Apple's driver,
+-    // which libusb can't open; spawn an elevated watcher (one UAC) that forces
+-    // our WinUSB onto it when it appears. Held for the duration of the restore.
++    // Native Apple libirecovery handles DFU/KIS. Only final PID1905 restore
++    // traffic uses the private libusb mux. Ignore shared-server inheritance;
++    // never alter Apple's system listener or spawn a driver-binding watcher.
+     #[cfg(target_os = "windows")]
+-    let _restore_watcher = crate::driver::spawn_restore_mode_watcher();
+-
++    let _usbmuxd = crate::usbmuxd::UsbmuxdGuard::start(progress)?;
++    #[cfg(target_os = "windows")]
++    probe_usbmux_endpoint(27016)?;
++
++    // Port DFU's controller ECID changes to the SoC ECID during the first
++    // native pass. A retry must rediscover the target instead of pinning the
++    // now-disconnected controller. Return a failure to the caller in that case.
++    #[cfg(not(target_os = "windows"))]
++    let max_attempts = {
++        let port_dfu = crate::device::list()
++            .map(|devices| devices.iter().any(|d| d.ecid == Some(ecid) && d.usb.pid == 0xf014))
++            .unwrap_or(false);
++        if port_dfu { 1 } else { RESTORE_ATTEMPTS }
++    };
++    #[cfg(target_os = "windows")]
++    let max_attempts = 1;
+     let mut attempt = 1;
+     loop {
+         match restore_attempt(ipsw, ecid, cache_dir, mode, verbose, progress) {
+@@ -253,10 +322,10 @@ pub fn restore(
+                 progress(Event::Done);
+                 return Ok(obliteration);
+             }
+-            Err(e) if attempt < RESTORE_ATTEMPTS && is_transient_failure(&e) => {
++            Err(e) if attempt < max_attempts && is_transient_failure(&e) => {
+                 progress(Event::RestoreRetrying {
+                     attempt,
+-                    max_attempts: RESTORE_ATTEMPTS,
++                    max_attempts,
+                     message: e.to_string(),
+                 });
+                 std::thread::sleep(RESTORE_RETRY_DELAY);
+diff --git a/crates/restorekit/src/usbmuxd.rs b/crates/restorekit/src/usbmuxd.rs
+index aa63e88..5ba2fc7 100644
+--- a/crates/restorekit/src/usbmuxd.rs
++++ b/crates/restorekit/src/usbmuxd.rs
+@@ -3,8 +3,7 @@
+ //! Runs the usbmuxd event loop on a background thread so `idevicerestore` (via
+ //! libusbmuxd) can reach USB devices for the restore-mode phase without an
+ //! external usbmuxd daemon. On Linux it listens on a private Unix socket; on
+-//! Windows on TCP `127.0.0.1:27015`, which is libusbmuxd's default there — so no
+-//! client-side configuration is needed.
++//! Windows uses private TCP `127.0.0.1:27016`, leaving Apple's listener untouched.
+ 
+ use std::ffi::CString;
+ use std::thread::{self, JoinHandle};
+@@ -12,21 +11,31 @@ use std::thread::{self, JoinHandle};
+ use crate::error::{Error, Result};
+ use crate::progress::{Event, ProgressFn};
+ 
++// The C backend deliberately leaves stale USB transfer state for process-exit
++// cleanup. Never reinitialize that state after a probe/restore in this process.
++#[cfg(target_os = "windows")]
++static WINDOWS_MUX_USED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
++
+ /// RAII guard that starts the embedded usbmuxd server and tears it down on drop.
+ pub struct UsbmuxdGuard {
+     /// The Unix socket file to clean up (Linux only).
+     #[cfg(target_os = "linux")]
+     socket_path: std::path::PathBuf,
+     thread: Option<JoinHandle<()>>,
++    #[cfg(target_os = "windows")]
++    previous_socket: Option<std::ffi::OsString>,
+ }
+ 
+ impl UsbmuxdGuard {
+     /// Start the embedded usbmuxd server and point libusbmuxd at it.
+     pub fn start(progress: ProgressFn) -> Result<Self> {
++        #[cfg(target_os = "windows")]
++        if WINDOWS_MUX_USED.swap(true, std::sync::atomic::Ordering::SeqCst) {
++            return Err(Error::UsbmuxdFailed("private Windows mux is single-use; start a fresh process".into()));
++        }
+         progress(Event::UsbmuxdStarting);
+ 
+-        // What we hand the C server (Linux: the socket path; Windows: ignored —
+-        // it binds a fixed loopback port).
++        // The C server validates the exact private loopback endpoint on Windows.
+         #[cfg(target_os = "linux")]
+         let socket_path = {
+             let path = std::path::PathBuf::from(format!(
+@@ -39,7 +48,7 @@ impl UsbmuxdGuard {
+         #[cfg(target_os = "linux")]
+         let start_arg = socket_path.to_string_lossy().into_owned();
+         #[cfg(target_os = "windows")]
+-        let start_arg = String::from("127.0.0.1:27015");
++        let start_arg = String::from("127.0.0.1:27016");
+ 
+         let path_c = CString::new(start_arg.as_bytes())
+             .map_err(|_| Error::UsbmuxdFailed("socket path contains a NUL byte".into()))?;
+@@ -47,13 +56,24 @@ impl UsbmuxdGuard {
+             Error::UsbmuxdFailed(format!("restorekit_usbmuxd_start returned {rc}"))
+         })?;
+ 
+-        let thread = thread::Builder::new()
++        #[cfg(target_os = "windows")]
++        let previous_socket = std::env::var_os("USBMUXD_SOCKET_ADDRESS");
++
++        let thread_result = thread::Builder::new()
+             .name("usbmuxd".into())
+-            .spawn(restorekit_sys::usbmuxd_run)
+-            .map_err(|e| Error::UsbmuxdFailed(format!("failed to spawn usbmuxd thread: {e}")))?;
++            .spawn(restorekit_sys::usbmuxd_run);
++        let thread = match thread_result {
++            Ok(thread) => thread,
++            Err(error) => {
++                restorekit_sys::usbmuxd_stop();
++                restorekit_sys::usbmuxd_cleanup();
++                return Err(Error::UsbmuxdFailed(format!("failed to spawn usbmuxd thread: {error}")));
++            }
++        };
++        #[cfg(target_os = "windows")]
++        unsafe { std::env::set_var("USBMUXD_SOCKET_ADDRESS", "127.0.0.1:27016") };
+ 
+-        // Point libusbmuxd (linked into idevicerestore) at our server. On Windows
+-        // its default is already TCP 127.0.0.1:27015, so nothing to set.
++        // Linux uses a private Unix socket; Windows env is set above and restored on Drop.
+         #[cfg(target_os = "linux")]
+         unsafe {
+             std::env::set_var(
+@@ -79,6 +99,8 @@ impl UsbmuxdGuard {
+             #[cfg(target_os = "linux")]
+             socket_path,
+             thread: Some(thread),
++            #[cfg(target_os = "windows")]
++            previous_socket,
+         })
+     }
+ }
+@@ -91,6 +113,13 @@ impl Drop for UsbmuxdGuard {
+             let _ = handle.join();
+         }
+         restorekit_sys::usbmuxd_cleanup();
++        #[cfg(target_os = "windows")]
++        unsafe {
++            match &self.previous_socket {
++                Some(value) => std::env::set_var("USBMUXD_SOCKET_ADDRESS", value),
++                None => std::env::remove_var("USBMUXD_SOCKET_ADDRESS"),
++            }
++        }
+ 
+         #[cfg(target_os = "linux")]
+         {

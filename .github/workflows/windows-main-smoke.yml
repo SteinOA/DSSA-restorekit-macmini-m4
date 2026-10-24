@@ -1,0 +1,46 @@
+name: Built Windows main no-device smoke
+on:
+  workflow_dispatch:
+  push:
+    paths: ['bin/windows-x64/restorekit.exe', 'ops/**/*.ps1', 'tests/cloud-main-smoke.ps1', '.github/workflows/windows-main-smoke.yml']
+permissions:
+  contents: read
+jobs:
+  main-smoke:
+    timeout-minutes: 5
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Parse ops scripts in Windows PowerShell 5.1 without executing
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $files=@(Get-ChildItem -LiteralPath ops -Recurse -Filter *.ps1 -File)
+          if(-not $files.Count){throw 'Expected ops PowerShell sources'}
+          foreach($file in $files){$tokens=$null;$parseErrors=$null;[void][System.Management.Automation.Language.Parser]::ParseFile($file.FullName,[ref]$tokens,[ref]$parseErrors);if($parseErrors){throw ($file.Name+': '+($parseErrors.Message -join '; '))}}
+          Write-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')
+      - name: Parse ops scripts in PowerShell 7 without executing
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $files=@(Get-ChildItem -LiteralPath ops -Recurse -Filter *.ps1 -File)
+          if(-not $files.Count){throw 'Expected ops PowerShell sources'}
+          foreach($file in $files){$tokens=$null;$parseErrors=$null;[void][System.Management.Automation.Language.Parser]::ParseFile($file.FullName,[ref]$tokens,[ref]$parseErrors);if($parseErrors){throw ($file.Name+': '+($parseErrors.Message -join '; '))}}
+          Write-Output ('AST syntax PASS version='+$PSVersionTable.PSVersion+' files='+$files.Count+'; no ops script executed')
+      - name: Actual built main private mux no-device check only
+        shell: pwsh
+        run: ./tests/cloud-main-smoke.ps1 -Replica ${{ matrix.replica }}
+      - name: Save isolated cloud smoke results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-main-no-device-${{ matrix.replica }}
+          path: cloud-smoke-results/
+          if-no-files-found: warn
+          retention-days: 14

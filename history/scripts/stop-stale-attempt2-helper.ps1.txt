@@ -1,0 +1,14 @@
+$ErrorActionPreference = 'Stop'
+$log = Join-Path $PSScriptRoot 'stop-stale-attempt2-helper.log'
+$oldNative = Get-CimInstance Win32_Process -Filter 'ProcessId = 94764'
+if ($oldNative) { throw 'Attempt 2 process still exists; do not stop its helper automatically.' }
+$helper = Get-CimInstance Win32_Process -Filter 'ProcessId = 87120'
+if (!$helper -or $helper.Name -ne 'powershell.exe' -or $helper.ParentProcessId -ne 94764 -or $helper.CommandLine -notmatch 'restorekit-restore-watch-94764\.ps1' -or $helper.CommandLine -notmatch 'restorekit-restore-live-94764\.tmp') { throw 'Exact stale helper identity did not match.' }
+$stopFile = Join-Path $env:TEMP 'restorekit-restore-live-94764.tmp'
+if ((Get-Content -LiteralPath $stopFile -Raw).Trim() -ne '1') { throw 'Unexpected liveness-file contents.' }
+'Verified stale helper PID87120, parent94764 absent.' | Set-Content -LiteralPath $log
+Remove-Item -LiteralPath $stopFile
+'Removed only the exact liveness file; requested graceful exit.' | Add-Content -LiteralPath $log
+try { Wait-Process -Id 87120 -Timeout 8 -ErrorAction Stop } catch { $_.Exception.Message | Add-Content -LiteralPath $log }
+'HelperPresent=' + [bool](Get-Process -Id 87120 -ErrorAction SilentlyContinue) | Add-Content -LiteralPath $log
+@(Get-NetTCPConnection -State Listen -LocalPort 27015 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess) | ConvertTo-Json | Add-Content -LiteralPath $log

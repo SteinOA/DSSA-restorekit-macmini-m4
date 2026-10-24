@@ -1,0 +1,9 @@
+$ErrorActionPreference = 'Stop'
+$log = Join-Path $PSScriptRoot 'defender-change.log'
+try {
+    Set-MpPreference -DisableRealtimeMonitoring $true
+    Get-MpComputerStatus | Select-Object AntivirusEnabled,RealTimeProtectionEnabled,IsTamperProtected | Format-List | Out-File -LiteralPath $log
+} catch {
+    $_ | Out-String | Out-File -LiteralPath $log
+    exit 1
+}

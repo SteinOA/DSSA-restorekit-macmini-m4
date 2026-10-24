@@ -1,0 +1,348 @@
+# Base directory: source
+diff --git a/crates/restorekit-sys/patches/idevicerestore/0007-fix-portdfu-event-synchronization.patch b/crates/restorekit-sys/patches/idevicerestore/0007-fix-portdfu-event-synchronization.patch
+new file mode 100644
+index 0000000..3fc6e83
+--- /dev/null
++++ b/crates/restorekit-sys/patches/idevicerestore/0007-fix-portdfu-event-synchronization.patch
+@@ -0,0 +1,71 @@
++--- a/src/idevicerestore.c
+++++ b/src/idevicerestore.c
++@@ -35,6 +35,10 @@
++ #include <zlib.h>
++ #include <libgen.h>
++ #include <signal.h>
+++#include <time.h>
+++#ifdef _WIN32
+++#include <windows.h>
+++#endif
++ 
++ #include <curl/curl.h>
++ 
++@@ -345,6 +349,18 @@
++ 
++ int build_identity_check_components_in_ipsw(plist_t build_identity, ipsw_archive_t ipsw);
++ 
+++/* Monotonic deadlines keep repeated condition wakes within the original budget. */
+++static uint64_t portdfu_monotonic_ms(void)
+++{
+++#ifdef _WIN32
+++	return GetTickCount64();
+++#else
+++	struct timespec now;
+++	clock_gettime(CLOCK_MONOTONIC, &now);
+++	return (uint64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
+++#endif
+++}
+++
++ int idevicerestore_start(struct idevicerestore_client_t* client)
++ {
++ 	int tss_enabled = 0;
++@@ -816,14 +832,22 @@
++ 			write_file("Ace3Binary", ace3bin, ace3bin_size);
++ 		}
++ 
+++		/* Serialize the send with callbacks so a quick reconnect cannot be lost. */
+++		mutex_lock(&client->device_event_mutex);
++ 		if (dfu_send_buffer_with_options(client, ace3bin, ace3bin_size, IRECV_SEND_OPT_DFU_NOTIFY_FINISH | IRECV_SEND_OPT_DFU_SMALL_PKT) < 0) {
+++			mutex_unlock(&client->device_event_mutex);
++ 			logger(LL_ERROR, "Could not send Ace3Buffer to device\n");
++ 			return -1;
++ 		}
++ 
++ 		logger(LL_DEBUG, "Waiting for device to disconnect...\n");
++-		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 5000);
++-		if (client->mode != MODE_UNKNOWN || (client->flags & FLAG_QUIT)) {
+++		uint64_t deadline = portdfu_monotonic_ms() + 15000;
+++		while (client->mode == MODE_PORTDFU && !(client->flags & FLAG_QUIT)) {
+++			uint64_t now = portdfu_monotonic_ms();
+++			if (now >= deadline) break;
+++			cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
+++		}
+++		if ((client->mode != MODE_UNKNOWN && client->mode != MODE_DFU) || (client->flags & FLAG_QUIT)) {
++ 			mutex_unlock(&client->device_event_mutex);
++ 
++ 			if (!(client->flags & FLAG_QUIT)) {
++@@ -833,7 +857,12 @@
++ 		}
++ 		dfu_client_free(client);
++ 		logger(LL_DEBUG, "Waiting for device to reconnect in DFU mode...\n");
++-		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 20000);
+++		deadline = portdfu_monotonic_ms() + 20000;
+++		while (client->mode == MODE_UNKNOWN && !(client->flags & FLAG_QUIT)) {
+++			uint64_t now = portdfu_monotonic_ms();
+++			if (now >= deadline) break;
+++			cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
+++		}
++ 		if (client->mode != MODE_DFU || (client->flags & FLAG_QUIT)) {
++ 			mutex_unlock(&client->device_event_mutex);
++ 			if (!(client->flags & FLAG_QUIT)) {
+# Base directory: source
+diff --git a/crates/restorekit-sys/patches/idevicerestore/0008-fix-dfu-reconnect-event-predicates.patch b/crates/restorekit-sys/patches/idevicerestore/0008-fix-dfu-reconnect-event-predicates.patch
+new file mode 100644
+index 0000000..ab39a8c
+--- /dev/null
++++ b/crates/restorekit-sys/patches/idevicerestore/0008-fix-dfu-reconnect-event-predicates.patch
+@@ -0,0 +1,129 @@
++--- a/src/common.h
+++++ b/src/common.h
++@@ -121,6 +121,7 @@
++ 	void* idevice_e_ctx;
++ 	mutex_t device_event_mutex;
++ 	cond_t device_event_cond;
+++	uint64_t device_disconnect_generation;
++ 	int ignore_device_add_events;
++ 	plist_t macos_variant;
++ 	plist_t recovery_variant;
++@@ -210,6 +211,9 @@
++ 
++ const char* path_get_basename(const char* path);
++ 
+++/* Internal monotonic clock shared by native transport wait predicates. */
+++uint64_t portdfu_monotonic_ms(void);
+++
++ #ifdef __cplusplus
++ }
++ #endif
++--- a/src/idevicerestore.c
+++++ b/src/idevicerestore.c
++@@ -333,6 +333,7 @@
++ 	} else if (event->type == IRECV_DEVICE_REMOVE) {
++ 		if (client->ecid && event->device_info->ecid == client->ecid) {
++ 			mutex_lock(&client->device_event_mutex);
+++			client->device_disconnect_generation++;
++ 			client->mode = MODE_UNKNOWN;
++ 			logger(LL_DEBUG, "%s: device %016" PRIx64 " (udid: %s) disconnected\n", __func__, client->ecid, (client->udid) ? client->udid : "N/A");
++ 			if (event->mode == IRECV_K_PORT_DFU_MODE) {
++@@ -350,7 +351,7 @@
++ int build_identity_check_components_in_ipsw(plist_t build_identity, ipsw_archive_t ipsw);
++ 
++ /* Monotonic deadlines keep repeated condition wakes within the original budget. */
++-static uint64_t portdfu_monotonic_ms(void)
+++uint64_t portdfu_monotonic_ms(void)
++ {
++ #ifdef _WIN32
++ 	return GetTickCount64();
++--- a/src/dfu.c
+++++ b/src/dfu.c
++@@ -473,6 +473,8 @@
++ int dfu_enter_recovery(struct idevicerestore_client_t* client, plist_t build_identity)
++ {
++ 	int mode = 0;
+++	uint64_t disconnect_generation;
+++	uint64_t deadline;
++ 
++ 	if (dfu_client_new(client) < 0) {
++ 		logger(LL_ERROR, "Unable to connect to DFU device\n");
++@@ -488,8 +490,10 @@
++ 	}
++ 
++ 	mutex_lock(&client->device_event_mutex);
+++	disconnect_generation = client->device_disconnect_generation;
++ 
++ 	if (dfu_send_component(client, build_identity, "iBSS") < 0) {
+++		mutex_unlock(&client->device_event_mutex);
++ 		logger(LL_ERROR, "Unable to send iBSS to device\n");
++ 		irecv_close(client->dfu->client);
++ 		client->dfu->client = NULL;
++@@ -500,8 +504,13 @@
++ 	if (client->build_major > 8) {
++ 		/* reconnect */
++ 		logger(LL_DEBUG, "Waiting for device to disconnect...\n");
++-		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
++-		if (client->mode != MODE_UNKNOWN || (client->flags & FLAG_QUIT)) {
+++		deadline = portdfu_monotonic_ms() + 10000;
+++		while (client->device_disconnect_generation == disconnect_generation && !(client->flags & FLAG_QUIT)) {
+++			uint64_t now = portdfu_monotonic_ms();
+++			if (now >= deadline) break;
+++			cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
+++		}
+++		if (client->device_disconnect_generation == disconnect_generation || (client->flags & FLAG_QUIT)) {
++ 			mutex_unlock(&client->device_event_mutex);
++ 			if (!(client->flags & FLAG_QUIT)) {
++ 				logger(LL_ERROR, "Device did not disconnect. Possibly invalid iBSS. Reset device and try again.\n");
++@@ -509,7 +518,12 @@
++ 			return -1;
++ 		}
++ 		logger(LL_DEBUG, "Waiting for device to reconnect...\n");
++-		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
+++		deadline = portdfu_monotonic_ms() + 10000;
+++		while (client->mode == MODE_UNKNOWN && !(client->flags & FLAG_QUIT)) {
+++			uint64_t now = portdfu_monotonic_ms();
+++			if (now >= deadline) break;
+++			cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
+++		}
++ 		if ((client->mode != MODE_DFU && client->mode != MODE_RECOVERY) || (client->flags & FLAG_QUIT)) {
++ 			mutex_unlock(&client->device_event_mutex);
++ 			if (!(client->flags & FLAG_QUIT)) {
++@@ -562,6 +576,7 @@
++ 		}
++ 
++ 		mutex_lock(&client->device_event_mutex);
+++		disconnect_generation = client->device_disconnect_generation;
++ 
++ 		// Now, before sending iBEC, we must send necessary firmwares on new versions.
++ 		if (client->macos_variant) {
++@@ -671,8 +686,13 @@
++ 	}
++ 
++ 	logger(LL_DEBUG, "Waiting for device to disconnect...\n");
++-	cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
++-	if (client->mode != MODE_UNKNOWN || (client->flags & FLAG_QUIT)) {
+++	deadline = portdfu_monotonic_ms() + 10000;
+++	while (client->device_disconnect_generation == disconnect_generation && !(client->flags & FLAG_QUIT)) {
+++		uint64_t now = portdfu_monotonic_ms();
+++		if (now >= deadline) break;
+++		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
+++	}
+++	if (client->device_disconnect_generation == disconnect_generation || (client->flags & FLAG_QUIT)) {
++ 		mutex_unlock(&client->device_event_mutex);
++ 		if (!(client->flags & FLAG_QUIT)) {
++ 			logger(LL_ERROR, "Device did not disconnect. Possibly invalid %s. Reset device and try again.\n", (client->build_major > 8) ? "iBEC" : "iBSS");
++@@ -680,7 +700,12 @@
++ 		return -1;
++ 	}
++ 	logger(LL_DEBUG, "Waiting for device to reconnect in recovery mode...\n");
++-	cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
+++	deadline = portdfu_monotonic_ms() + 10000;
+++	while (client->mode == MODE_UNKNOWN && !(client->flags & FLAG_QUIT)) {
+++		uint64_t now = portdfu_monotonic_ms();
+++		if (now >= deadline) break;
+++		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
+++	}
++ 	if (client->mode != MODE_RECOVERY || (client->flags & FLAG_QUIT)) {
++ 		mutex_unlock(&client->device_event_mutex);
++ 		if (!(client->flags & FLAG_QUIT)) {
+# Base directory: source/crates/restorekit-sys/vendor/usbmuxd
+diff --git a/src/restore_identity.h b/src/restore_identity.h
+new file mode 100644
+index 0000000..969625a
+--- /dev/null
++++ b/src/restore_identity.h
+@@ -0,0 +1,70 @@
++#ifndef RK_RESTORE_IDENTITY_H
++#define RK_RESTORE_IDENTITY_H
++#include <stddef.h>
++#include <stdint.h>
++#include <string.h>
++
++/* Pure descriptor parsing: no USB access, allocation, or locale-dependent rules. */
++static const char *rk_string_shape(const unsigned char *data, size_t actual)
++{
++    if (!data || actual < 2 || actual > 255) return "short-or-oversized-descriptor";
++    if (data[1] != 3) return "wrong-descriptor-type";
++    if (data[0] != actual || (actual & 1)) return "invalid-descriptor-length";
++    return NULL;
++}
++
++static const char *rk_advertised_language(const unsigned char *data, size_t actual, uint16_t *language)
++{
++    const char *error = rk_string_shape(data, actual);
++    if (error) return error;
++    if (actual < 4) return "empty-language-list";
++    *language = 0;
++    for (size_t i = 2; i < actual; i += 2) {
++        uint16_t item = (uint16_t)(data[i] | ((uint16_t)data[i+1] << 8));
++        if (!item) return "invalid-zero-language";
++        if (!*language || item == 0x0409) *language = item;
++    }
++    return NULL;
++}
++
++static const char *rk_decode_restore_serial(const unsigned char *data, size_t actual, char *serial, size_t capacity)
++{
++    if (!serial || !capacity) return "missing-output-buffer";
++    serial[0] = '\0';
++    const char *error = rk_string_shape(data, actual);
++    if (error) return error;
++    size_t count = (actual - 2) / 2;
++    if (count >= capacity) return "serial-too-long";
++    for (size_t i = 0; i < count; i++) {
++        unsigned char low = data[2 + i*2], high = data[3 + i*2];
++        if (high || !low || low > 0x7f) { serial[0] = '\0'; return "non-ascii-or-nul-serial"; }
++        serial[i] = (char)low;
++    }
++    serial[count] = '\0';
++    return NULL;
++}
++
++static int rk_authorized_restore_serial(const char *serial)
++{
++    static const char expected[] = "00008132001808291EA2401C";
++    size_t length = strlen(serial), source = 0;
++    if (length != 24 && length != 25) return 0;
++    for (size_t i = 0; i < 24; i++) {
++        if (i == 8 && length == 25) { if (serial[source++] != '-') return 0; }
++        unsigned char ch = (unsigned char)serial[source++];
++        if (ch >= 'a' && ch <= 'f') ch = (unsigned char)(ch - 'a' + 'A');
++        if (ch != (unsigned char)expected[i]) return 0;
++    }
++    return source == length;
++}
++
++static const char *rk_verify_restore_response(int completed, const unsigned char *data, size_t actual, char *serial, size_t capacity)
++{
++    if (!serial || !capacity) return "missing-output-buffer";
++    serial[0] = '\0';
++    if (!completed) return "usb-transfer-not-completed";
++    const char *error = rk_decode_restore_serial(data, actual, serial, capacity);
++    if (error) return error;
++    return rk_authorized_restore_serial(serial) ? NULL : "authorized-identity-mismatch";
++}
++#endif
+# Base directory: source/crates/restorekit-sys/vendor/usbmuxd
+diff --git a/tests/restore_identity_fixtures.c b/tests/restore_identity_fixtures.c
+new file mode 100644
+index 0000000..eb30192
+--- /dev/null
++++ b/tests/restore_identity_fixtures.c
+@@ -0,0 +1,50 @@
++/* Pure fixtures: compile/run separately; no libusb linkage or hardware access. */
++#include <stdio.h>
++#include "../src/restore_identity.h"
++#define CHECK(test) do { if (!(test)) { fprintf(stderr,"FAIL line %d: %s\n",__LINE__,#test); return 1; } } while (0)
++static size_t descriptor(const char *text, unsigned char *out)
++{
++    size_t count = strlen(text);
++    out[0] = (unsigned char)(2 + count*2); out[1] = 3;
++    for (size_t i=0;i<count;i++) { out[2+i*2]=(unsigned char)text[i]; out[3+i*2]=0; }
++    return 2+count*2;
++}
++int main(void)
++{
++    unsigned char data[255]; char serial[128]; size_t count;
++    count=descriptor("00008132001808291EA2401C",data);
++    CHECK(!rk_verify_restore_response(1,data,count,serial,sizeof(serial)));
++    CHECK(!strcmp(serial,"00008132001808291EA2401C"));
++    count=descriptor("00008132-001808291EA2401C",data);
++    CHECK(!rk_verify_restore_response(1,data,count,serial,sizeof(serial)));
++    count=descriptor("00008132-001808291ea2401c",data);
++    CHECK(!rk_verify_restore_response(1,data,count,serial,sizeof(serial)));
++    count=descriptor("00008132-001808291EA2401D",data);
++    CHECK(!strcmp(rk_verify_restore_response(1,data,count,serial,sizeof(serial)),"authorized-identity-mismatch"));
++    CHECK(!rk_authorized_restore_serial("00008132--001808291EA2401C"));
++    CHECK(!rk_authorized_restore_serial("00008133-001808291EA2401C"));
++    CHECK(!rk_authorized_restore_serial("00008132-001808291EA2401C "));
++    CHECK(!strcmp(rk_verify_restore_response(0,NULL,0,serial,sizeof(serial)),"usb-transfer-not-completed"));
++    CHECK(!strcmp(rk_verify_restore_response(1,data,1,serial,sizeof(serial)),"short-or-oversized-descriptor"));
++    count=descriptor("00008132001808291EA2401C",data);
++    CHECK(rk_verify_restore_response(1,data,count-2,serial,sizeof(serial))!=NULL);
++    data[1]=2; CHECK(rk_verify_restore_response(1,data,count,serial,sizeof(serial))!=NULL);
++    count=descriptor("00008132001808291EA2401C",data);
++    data[3]=1; CHECK(rk_verify_restore_response(1,data,count,serial,sizeof(serial))!=NULL);
++    count=descriptor("00008132001808291EA2401C",data);
++    data[2]=0; CHECK(rk_verify_restore_response(1,data,count,serial,sizeof(serial))!=NULL);
++    CHECK(rk_decode_restore_serial(data,count,serial,1)!=NULL);
++    uint16_t language=0;
++    unsigned char english[]={4,3,9,4};
++    unsigned char norwegian[]={4,3,0x14,4};
++    unsigned char multiple[]={6,3,0x14,4,9,4};
++    unsigned char zero[]={4,3,0,0};
++    CHECK(!rk_advertised_language(english,sizeof(english),&language)&&language==0x0409);
++    CHECK(!rk_advertised_language(norwegian,sizeof(norwegian),&language)&&language==0x0414);
++    CHECK(!rk_advertised_language(multiple,sizeof(multiple),&language)&&language==0x0409);
++    CHECK(rk_advertised_language(zero,sizeof(zero),&language)!=NULL);
++    CHECK(rk_advertised_language(english,3,&language)!=NULL);
++    CHECK(rk_advertised_language(english,2,&language)!=NULL);
++    puts("restore identity fixtures passed (pure data; no USB access)");
++    return 0;
++}

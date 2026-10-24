@@ -1,0 +1,29 @@
+{
+  "created": "2026-10-24T04:52:15.0862247+02:00",
+  "targetHardwareId": "USB\\VID_05AC&PID_1905",
+  "architecture": "amd64",
+  "provider": "Mac mini Restore 1905",
+  "interfaceGuid": "{7A8E6228-8704-40CD-A54C-7869B23D1905}",
+  "payload": "INF + signed CAT; Windows inbox winusb.sys, no supplied SYS",
+  "signerThumbprint": "4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31",
+  "signerSubject": "CN=RestoreKit WinUSB",
+  "signerExpires": "2027-10-24T03:11:17.0000000+02:00",
+  "signatureStatus": "Valid",
+  "catalogContentStatus": "Valid",
+  "infUnchanged": true,
+  "files": [
+    {
+      "name": "macmini_restore_1905.cat",
+      "bytes": 1780,
+      "sha256": "6597FB9FC3F12FF4BA5B99154AEEEBA79CFB716A701DAFAB689DDBAE835DD3CB"
+    },
+    {
+      "name": "macmini_restore_1905.inf",
+      "bytes": 757,
+      "sha256": "96900A82E846BDE1999787C566D8B22DC52D108545B9E76FCAA4DA2F79334E02"
+    }
+  ],
+  "installationPerformed": false,
+  "certificateTrustChanged": false,
+  "driverChangesPerformed": false
+}

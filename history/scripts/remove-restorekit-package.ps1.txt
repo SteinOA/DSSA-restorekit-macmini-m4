@@ -1,0 +1,141 @@
+param([Parameter(Mandatory=$true)][ValidateSet('Inspect','Remove')][string]$Action)
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+$reportDir = Join-Path $root 'outputs\Driverlogg-RestoreKit'
+$backupDir = Join-Path $PSScriptRoot 'restorekit-driver-backup'
+$statePath = Join-Path $reportDir 'before.json'
+$knownInstance = 'USB\VID_05AC&PID_1881\5&356B5377&0&13'
+$physicalPath = 'PCIROOT(0)#PCI(1400)#USBROOT(0)#USB(13)'
+$infPath = Join-Path $env:windir 'INF\oem288.inf'
+$pnpUtil = Join-Path $env:windir 'System32\pnputil.exe'
+New-Item -ItemType Directory -Path $reportDir -Force | Out-Null
+$logPath = Join-Path $reportDir ($Action.ToLowerInvariant() + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
+function Log([string]$message) {
+    $line = (Get-Date -Format o) + ' ' + $message
+    Add-Content -LiteralPath $logPath -Value $line
+    Write-Host $line
+}
+function Run-PnpUtil([string[]]$arguments,[string]$name) {
+    Log ('pnputil ' + ($arguments -join ' '))
+    $output = & $pnpUtil @arguments 2>&1
+    $result = $LASTEXITCODE
+    $output | Out-File -LiteralPath (Join-Path $reportDir $name) -Encoding utf8
+    Log "pnputil exit=$result; output=$name"
+    return $result
+}
+function Apple-Hashes {
+    $hashes = @{}
+    foreach ($name in @('oem147.inf','oem178.inf','oem91.inf')) {
+        $path = Join-Path $env:windir ('INF\' + $name)
+        $hashes[$name] = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+    }
+    return $hashes
+}
+function No-ActiveRestore {
+    $all = @(Get-CimInstance Win32_Process)
+    $byId = @{}; foreach ($p in $all) { $byId[[uint32]$p.ProcessId] = $p }
+    $ancestors = @{}; $cursor = [uint32]$PID
+    for ($i=0;$i -lt 64;$i++) {
+        if ($ancestors.ContainsKey($cursor) -or -not $byId.ContainsKey($cursor)) { break }
+        $ancestors[$cursor] = $true; $child = $byId[$cursor]; $parentId = [uint32]$child.ParentProcessId
+        if (-not $byId.ContainsKey($parentId)) { break }
+        $parent = $byId[$parentId]
+        if (-not $parent.CreationDate -or -not $child.CreationDate -or $parent.CreationDate -gt $child.CreationDate) { break }
+        $cursor = $parentId
+    }
+    $active = @($all | Where-Object {
+        -not $ancestors.ContainsKey([uint32]$_.ProcessId) -and (
+            $_.Name -match '^(restorekit|irecovery|idevicerestore)\.exe$' -or
+            ($_.Name -match '^(powershell|pwsh)\.exe$' -and $_.CommandLine -match '(?i)--rk-bind|restorekit-restore-watch|restore-live\.ps1|restore-supervisor\.ps1|restore-apple-attempt\d+\.ps1|reset-exact-mac-port\.ps1|force-dfu-driver\.ps1')
+        )
+    })
+    if ($active.Count) { throw ('Active restore/helper process: ' + (($active | ForEach-Object { "$($_.ProcessId):$($_.Name)" }) -join ', ')) }
+}
+function Device-Inventory {
+    $presentIds = @{}
+    foreach ($node in @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '^(USB|KIS)\\VID_05AC&PID_' })) { $presentIds[$node.InstanceId] = $true }
+    $rows = @()
+    foreach ($node in @(Get-PnpDevice | Where-Object { $_.InstanceId -match '^(USB|KIS)\\VID_05AC&PID_' })) {
+        # Query one instance per call; array requests can silently omit results.
+        $driver = (Get-PnpDeviceProperty -InstanceId $node.InstanceId -KeyName DEVPKEY_Device_DriverInfPath -ErrorAction SilentlyContinue).Data
+        $locations = @((Get-PnpDeviceProperty -InstanceId $node.InstanceId -KeyName DEVPKEY_Device_LocationPaths -ErrorAction SilentlyContinue).Data)
+        $parent = (Get-PnpDeviceProperty -InstanceId $node.InstanceId -KeyName DEVPKEY_Device_Parent -ErrorAction SilentlyContinue).Data
+        $service = (Get-PnpDeviceProperty -InstanceId $node.InstanceId -KeyName DEVPKEY_Device_Service -ErrorAction SilentlyContinue).Data
+        $rows += [pscustomobject]@{InstanceId=$node.InstanceId;Present=$presentIds.ContainsKey($node.InstanceId);Inf=$driver;Locations=$locations;Parent=$parent;Service=$service;Status=$node.Status;Name=$node.FriendlyName}
+    }
+    return $rows
+}
+function Check-Target($inventory) {
+    No-ActiveRestore
+    $parents = @($inventory | Where-Object { $_.Present -and $_.InstanceId -match '^USB\\VID_05AC&PID_' -and $_.InstanceId -notmatch '&MI_[0-9A-F]{2}\\' })
+    if ($parents.Count -ne 1 -or $parents[0].InstanceId -ine $knownInstance) { throw 'Expected sole present Mac parent at known1881 instance' }
+    $references = @($inventory | Where-Object { $_.Inf -ieq 'oem288.inf' })
+    foreach ($reference in $references) {
+        if ($reference.InstanceId -ine $knownInstance -or @($reference.Locations | Where-Object { $_ -ieq $physicalPath }).Count -ne 1) { throw "oem288.inf reference outside exact authorized Mac node/port: $($reference.InstanceId)" }
+    }
+    if (@($parents[0].Locations | Where-Object { $_ -ieq $physicalPath }).Count -ne 1) { throw 'Current Mac physical location changed' }
+}
+function Check-Package {
+    $content = Get-Content -LiteralPath $infPath -Raw
+    if ($content -notmatch '(?im)^Provider\s*=\s*%ProviderName%\s*$' -or $content -notmatch '(?im)^ProviderName\s*=\s*"RestoreKit"\s*$' -or $content -notmatch '(?im)^CatalogFile\s*=\s*restorekit_winusb\.cat\s*$' -or $content -notmatch '(?im)^DriverVer\s*=\s*01/01/2024,1\.0\.0\.0\s*$') { throw 'oem288.inf is not the reviewed RestoreKit package' }
+    $hash = (Get-FileHash -LiteralPath $infPath -Algorithm SHA256).Hash
+    if ($hash -ne 'DAE83559980029DC1ED40E79B06E2A2DFCFA180441FDC206DE9B0C18404DB45C') { throw 'RestoreKit INF does not match exact reviewed package hash' }
+    return $hash
+}
+try {
+    $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Administrator privileges required for exact package export/removal' }
+    Log "Action=$Action; ONLY package oem288.inf original restorekit_winusb.inf Provider RestoreKit is in scope; Apple147/178/91 preserved"
+    if ($Action -eq 'Inspect') {
+        if (Test-Path -LiteralPath $statePath) { throw 'Existing before.json retained; inspect existing log rather than overwrite the review snapshot' }
+        $infHash = Check-Package
+        Copy-Item -LiteralPath $infPath -Destination (Join-Path $reportDir 'oem288-before.inf')
+        $enumCode = Run-PnpUtil -arguments @('/enum-drivers') -name 'drivers-before.txt'
+        if ($enumCode -ne 0) { throw "Driver inventory failed exit=$enumCode" }
+        $inventory = @(Device-Inventory)
+        $appleHashes = Apple-Hashes
+        $state = [ordered]@{Ready=$false;Created=(Get-Date -Format o);PublishedInf='oem288.inf';OriginalInf='restorekit_winusb.inf';Provider='RestoreKit';Version='01/01/2024,1.0.0.0';InfSHA256=$infHash;KnownInstance=$knownInstance;PhysicalPath=$physicalPath;BackupDirectory=$backupDir;AppleHashes=$appleHashes;Inventory=$inventory;BackupFiles=@()}
+        $state | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $statePath
+        $inventory | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $reportDir 'bindings-before.json')
+        Check-Target $inventory
+        New-Item -ItemType Directory -Path $backupDir -Force | Out-Null
+        $exportCode = Run-PnpUtil -arguments @('/export-driver','oem288.inf',$backupDir) -name 'export-backup.txt'
+        if ($exportCode -ne 0) { throw "Exact driver export failed exit=$exportCode" }
+        $backupFiles = @(Get-ChildItem -LiteralPath $backupDir -Recurse -File | ForEach-Object { [pscustomobject]@{Path=$_.FullName;Length=$_.Length;SHA256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash} })
+        if (-not @($backupFiles | Where-Object { (Split-Path $_.Path -Leaf) -ieq 'restorekit_winusb.inf' -and $_.SHA256 -eq $infHash }).Count) { throw 'Exported INF does not match reviewed oem288.inf' }
+        if (-not @($backupFiles | Where-Object { (Split-Path $_.Path -Leaf) -ieq 'restorekit_winusb.cat' }).Count) { throw 'Exported catalog missing' }
+        $state.BackupFiles = $backupFiles; $state.Ready=$true
+        $state | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $statePath
+        Log "INSPECT COMPLETE: before snapshot and exported backup ready. No driver removed. INF SHA256=$infHash"
+    } else {
+        if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) { throw 'Inspect snapshot required before Remove' }
+        $before = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
+        if (-not $before.Ready -or $before.PublishedInf -ne 'oem288.inf' -or $before.KnownInstance -ine $knownInstance -or $before.PhysicalPath -ne $physicalPath -or $before.BackupDirectory -ne $backupDir) { throw 'Inspect snapshot incomplete or identity changed' }
+        if ((Check-Package) -ne $before.InfSHA256) { throw 'RestoreKit INF changed since review' }
+        foreach ($file in @($before.BackupFiles)) {
+            if (-not $file.Path.StartsWith($backupDir.TrimEnd('\')+'\',[StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $file.Path -PathType Leaf) -or (Get-FileHash -LiteralPath $file.Path -Algorithm SHA256).Hash -ne $file.SHA256) { throw 'Reviewed exported backup changed or missing' }
+        }
+        if (@($before.BackupFiles).Count -lt 2) { throw 'Reviewed backup is incomplete' }
+        $currentHashes = Apple-Hashes
+        foreach ($name in @('oem147.inf','oem178.inf','oem91.inf')) { if ($currentHashes[$name] -ne $before.AppleHashes.$name) { throw "Protected Apple INF changed before removal: $name" } }
+        $inventory = @(Device-Inventory)
+        Check-Target $inventory
+        $oldRefs = @($before.Inventory | Where-Object { $_.Inf -ieq 'oem288.inf' } | ForEach-Object { $_.InstanceId } | Sort-Object)
+        $newRefs = @($inventory | Where-Object { $_.Inf -ieq 'oem288.inf' } | ForEach-Object { $_.InstanceId } | Sort-Object)
+        if (($oldRefs -join '|') -ine ($newRefs -join '|')) { throw 'RestoreKit device references changed since inspection' }
+        Log 'Revalidation passed; deleting ONLY oem288.inf using /uninstall, without /force or /reboot'
+        $deleteCode = Run-PnpUtil -arguments @('/delete-driver','oem288.inf','/uninstall') -name 'delete-oem288.txt'
+        Log "DELETE RESULT exit=$deleteCode (3010 means reboot required; no reboot requested)"
+        [void](Run-PnpUtil -arguments @('/enum-drivers') -name 'drivers-after.txt')
+        $afterHashes = Apple-Hashes
+        $preserved = $true
+        foreach ($name in @('oem147.inf','oem178.inf','oem91.inf')) { $same=$afterHashes[$name] -eq $before.AppleHashes.$name; Log "Apple protected INF $name unchanged=$same SHA256=$($afterHashes[$name])"; if (-not $same) { $preserved=$false } }
+        $afterInventory = @(Device-Inventory)
+        $afterInventory | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $reportDir 'bindings-after.json')
+        Get-CimInstance Win32_SystemDriver | Where-Object { $_.Name -match 'Apple|WinUSB' } | Select-Object Name,State,StartMode,PathName | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $reportDir 'services-after.json')
+        [pscustomobject]@{DeleteExitCode=$deleteCode;RestoreKitInfStillPresent=(Test-Path -LiteralPath $infPath);AppleHashesPreserved=$preserved;AppleHashes=$afterHashes;Time=(Get-Date -Format o)} | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $reportDir 'after.json')
+        if (-not $preserved) { throw 'Protected Apple INF hash changed; inspect logs immediately' }
+        if ($deleteCode -notin @(0,3010)) { throw "Exact package removal failed exit=$deleteCode; no retry performed" }
+        Log 'Removal command complete; binding and service evidence retained. No restore, force removal, reboot, or process stop performed.'
+    }
+} catch { Log ('STOPPED: '+$_.Exception.Message); exit 1 }

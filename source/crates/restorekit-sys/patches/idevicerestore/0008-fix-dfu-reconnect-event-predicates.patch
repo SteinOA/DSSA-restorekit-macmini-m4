@@ -1,0 +1,129 @@
+--- a/src/common.h
++++ b/src/common.h
+@@ -121,6 +121,7 @@
+ 	void* idevice_e_ctx;
+ 	mutex_t device_event_mutex;
+ 	cond_t device_event_cond;
++	uint64_t device_disconnect_generation;
+ 	int ignore_device_add_events;
+ 	plist_t macos_variant;
+ 	plist_t recovery_variant;
+@@ -210,6 +211,9 @@
+ 
+ const char* path_get_basename(const char* path);
+ 
++/* Internal monotonic clock shared by native transport wait predicates. */
++uint64_t portdfu_monotonic_ms(void);
++
+ #ifdef __cplusplus
+ }
+ #endif
+--- a/src/idevicerestore.c
++++ b/src/idevicerestore.c
+@@ -333,6 +333,7 @@
+ 	} else if (event->type == IRECV_DEVICE_REMOVE) {
+ 		if (client->ecid && event->device_info->ecid == client->ecid) {
+ 			mutex_lock(&client->device_event_mutex);
++			client->device_disconnect_generation++;
+ 			client->mode = MODE_UNKNOWN;
+ 			logger(LL_DEBUG, "%s: device %016" PRIx64 " (udid: %s) disconnected\n", __func__, client->ecid, (client->udid) ? client->udid : "N/A");
+ 			if (event->mode == IRECV_K_PORT_DFU_MODE) {
+@@ -350,7 +351,7 @@
+ int build_identity_check_components_in_ipsw(plist_t build_identity, ipsw_archive_t ipsw);
+ 
+ /* Monotonic deadlines keep repeated condition wakes within the original budget. */
+-static uint64_t portdfu_monotonic_ms(void)
++uint64_t portdfu_monotonic_ms(void)
+ {
+ #ifdef _WIN32
+ 	return GetTickCount64();
+--- a/src/dfu.c
++++ b/src/dfu.c
+@@ -473,6 +473,8 @@
+ int dfu_enter_recovery(struct idevicerestore_client_t* client, plist_t build_identity)
+ {
+ 	int mode = 0;
++	uint64_t disconnect_generation;
++	uint64_t deadline;
+ 
+ 	if (dfu_client_new(client) < 0) {
+ 		logger(LL_ERROR, "Unable to connect to DFU device\n");
+@@ -488,8 +490,10 @@
+ 	}
+ 
+ 	mutex_lock(&client->device_event_mutex);
++	disconnect_generation = client->device_disconnect_generation;
+ 
+ 	if (dfu_send_component(client, build_identity, "iBSS") < 0) {
++		mutex_unlock(&client->device_event_mutex);
+ 		logger(LL_ERROR, "Unable to send iBSS to device\n");
+ 		irecv_close(client->dfu->client);
+ 		client->dfu->client = NULL;
+@@ -500,8 +504,13 @@
+ 	if (client->build_major > 8) {
+ 		/* reconnect */
+ 		logger(LL_DEBUG, "Waiting for device to disconnect...\n");
+-		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
+-		if (client->mode != MODE_UNKNOWN || (client->flags & FLAG_QUIT)) {
++		deadline = portdfu_monotonic_ms() + 10000;
++		while (client->device_disconnect_generation == disconnect_generation && !(client->flags & FLAG_QUIT)) {
++			uint64_t now = portdfu_monotonic_ms();
++			if (now >= deadline) break;
++			cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
++		}
++		if (client->device_disconnect_generation == disconnect_generation || (client->flags & FLAG_QUIT)) {
+ 			mutex_unlock(&client->device_event_mutex);
+ 			if (!(client->flags & FLAG_QUIT)) {
+ 				logger(LL_ERROR, "Device did not disconnect. Possibly invalid iBSS. Reset device and try again.\n");
+@@ -509,7 +518,12 @@
+ 			return -1;
+ 		}
+ 		logger(LL_DEBUG, "Waiting for device to reconnect...\n");
+-		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
++		deadline = portdfu_monotonic_ms() + 10000;
++		while (client->mode == MODE_UNKNOWN && !(client->flags & FLAG_QUIT)) {
++			uint64_t now = portdfu_monotonic_ms();
++			if (now >= deadline) break;
++			cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
++		}
+ 		if ((client->mode != MODE_DFU && client->mode != MODE_RECOVERY) || (client->flags & FLAG_QUIT)) {
+ 			mutex_unlock(&client->device_event_mutex);
+ 			if (!(client->flags & FLAG_QUIT)) {
+@@ -562,6 +576,7 @@
+ 		}
+ 
+ 		mutex_lock(&client->device_event_mutex);
++		disconnect_generation = client->device_disconnect_generation;
+ 
+ 		// Now, before sending iBEC, we must send necessary firmwares on new versions.
+ 		if (client->macos_variant) {
+@@ -671,8 +686,13 @@
+ 	}
+ 
+ 	logger(LL_DEBUG, "Waiting for device to disconnect...\n");
+-	cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
+-	if (client->mode != MODE_UNKNOWN || (client->flags & FLAG_QUIT)) {
++	deadline = portdfu_monotonic_ms() + 10000;
++	while (client->device_disconnect_generation == disconnect_generation && !(client->flags & FLAG_QUIT)) {
++		uint64_t now = portdfu_monotonic_ms();
++		if (now >= deadline) break;
++		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
++	}
++	if (client->device_disconnect_generation == disconnect_generation || (client->flags & FLAG_QUIT)) {
+ 		mutex_unlock(&client->device_event_mutex);
+ 		if (!(client->flags & FLAG_QUIT)) {
+ 			logger(LL_ERROR, "Device did not disconnect. Possibly invalid %s. Reset device and try again.\n", (client->build_major > 8) ? "iBEC" : "iBSS");
+@@ -680,7 +700,12 @@
+ 		return -1;
+ 	}
+ 	logger(LL_DEBUG, "Waiting for device to reconnect in recovery mode...\n");
+-	cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, 10000);
++	deadline = portdfu_monotonic_ms() + 10000;
++	while (client->mode == MODE_UNKNOWN && !(client->flags & FLAG_QUIT)) {
++		uint64_t now = portdfu_monotonic_ms();
++		if (now >= deadline) break;
++		cond_wait_timeout(&client->device_event_cond, &client->device_event_mutex, (unsigned int)(deadline - now));
++	}
+ 	if (client->mode != MODE_RECOVERY || (client->flags & FLAG_QUIT)) {
+ 		mutex_unlock(&client->device_event_mutex);
+ 		if (!(client->flags & FLAG_QUIT)) {

@@ -1,0 +1,74 @@
+# PREPARED ONLY. Execute only after explicit user approval to stage this package.
+# Staging uses pnputil /add-driver WITHOUT /install. No existing package is deleted.
+[CmdletBinding()]
+param()
+$ErrorActionPreference='Stop'
+Set-StrictMode -Version Latest
+$taskRoot=Split-Path -Parent $PSScriptRoot
+$package=Join-Path $taskRoot 'outputs/Mac1905-driver/pakke'
+$logRoot=Join-Path $taskRoot ('outputs/Mac1905-driver/Installasjon-'+(Get-Date -Format 'yyyyMMdd-HHmmss'))
+$expected=@{
+ 'macmini_restore_1905.inf'='96900A82E846BDE1999787C566D8B22DC52D108545B9E76FCAA4DA2F79334E02'
+ 'macmini_restore_1905.cat'='6597FB9FC3F12FF4BA5B99154AEEEBA79CFB716A701DAFAB689DDBAE835DD3CB'
+}
+$thumb='4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31'
+$principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){throw 'Run from an administrator PowerShell only after user approval.'}
+$files=@(Get-ChildItem -LiteralPath $package -Force)
+if($files.Count-ne2){throw 'Package directory must contain exactly the two reviewed files.'}
+foreach($f in $files){if($f.PSIsContainer -or -not $expected.ContainsKey($f.Name)){throw 'Unexpected package entry.'};if((Get-FileHash -LiteralPath $f.FullName -Algorithm SHA256).Hash-ne$expected[$f.Name]){throw "Package hash mismatch: $($f.Name)"}}
+$inf=Join-Path $package 'macmini_restore_1905.inf'
+$cat=Join-Path $package 'macmini_restore_1905.cat'
+$infText=Get-Content -LiteralPath $inf -Raw
+$hardware=@([regex]::Matches($infText,'(?im)^\s*%DeviceName%\s*=\s*Mac1905_WinUSB\s*,\s*(USB\\[^\r\n]+)\s*$') | ForEach-Object {$_.Groups[1].Value.Trim()})
+if($hardware.Count-ne1 -or $hardware[0]-ne'USB\VID_05AC&PID_1905'){throw 'INF hardware scope differs from reviewed 1905-only match.'}
+if($infText-match '(?im)^\s*(AddService|CopyFiles|DelFiles|DelReg|UpperFilters|LowerFilters)\s*='){throw 'Unexpected private service, payload or filter operation in INF.'}
+$sig=Get-AuthenticodeSignature -LiteralPath $cat
+if($sig.Status-ne'Valid' -or $sig.SignerCertificate.Thumbprint-ne$thumb){throw 'Reviewed catalog signature is not valid.'}
+if((Test-FileCatalog -Path $package -CatalogFilePath $cat)-ne'Valid'){throw 'Catalog hashes are not valid.'}
+foreach($store in @('Cert:/LocalMachine/Root','Cert:/LocalMachine/TrustedPublisher')){if(-not(Test-Path -LiteralPath "$store/$thumb")){throw "Existing certificate trust missing: $store; this script never installs trust."}}
+if(-not(Test-Path -LiteralPath "Cert:/CurrentUser/My/$thumb")){throw 'Original task certificate is missing; stop for review.'}
+$active=@(Get-CimInstance Win32_Process | Where-Object {$_.ProcessId-ne$PID -and ($_.Name-eq'restorekit.exe' -or ($_.Name-match '^(pwsh|powershell)\.exe$' -and $_.CommandLine-match '(?i)--rk-bind-restore-mode|supervis(or|e)|reset-exact-mac-port'))})
+if($active.Count){throw 'A restore process or task watcher is active. Stop and review first.'}
+function Read-AppleNodes {
+ @(Get-PnpDevice | Where-Object {$_.InstanceId-match '^(USB|KIS)\\VID_05AC'} | ForEach-Object {
+  $d=$_;$props=@{};Get-PnpDeviceProperty -InstanceId $d.InstanceId -ErrorAction SilentlyContinue | ForEach-Object {$props[$_.KeyName]=$_.Data}
+  [pscustomobject]@{InstanceId=$d.InstanceId;Name=$d.FriendlyName;Status=[string]$d.Status;Present=[bool]$props['DEVPKEY_Device_IsPresent'];Parent=$props['DEVPKEY_Device_Parent'];Location=$props['DEVPKEY_Device_LocationInfo'];Inf=$props['DEVPKEY_Device_DriverInfPath'];Service=$props['DEVPKEY_Device_Service'];HardwareIds=$props['DEVPKEY_Device_HardwareIds']}
+ })
+}
+$nodes=Read-AppleNodes
+foreach($node in @($nodes | Where-Object Present)){
+ $ancestor=$node;$valid=$false
+ for($depth=0;$depth-lt6 -and $null-ne$ancestor;$depth++){
+  $identity=$ancestor.InstanceId-match '(?i)ECID:(165715DA257CBD11|001808291EA2401C)(_|$)|^USB\\VID_05AC&PID_1905\\00008132-001808291EA2401C$|^USB\\VID_05AC&PID_1881\\5&356B5377&0&13$'
+  if($identity -and $ancestor.Location-eq'Port_#0013.Hub_#0002' -and $ancestor.Parent-eq'USB\ROOT_HUB30\4&2720bdb3&0&0'){$valid=$true;break}
+  $nextAncestor=@($nodes | Where-Object InstanceId -eq $ancestor.Parent | Select-Object -First 1)
+  $ancestor=if($nextAncestor.Count){$nextAncestor[0]}else{$null}
+ }
+ if(-not$valid){throw "Present Apple device outside exact reviewed Mac/port scope: $($node.InstanceId)"}
+}
+$protected=@('oem147.inf','oem178.inf','oem91.inf')
+$protectedBefore=@{};foreach($name in $protected){$protectedBefore[$name]=(Get-FileHash -LiteralPath (Join-Path $env:windir "INF/$name") -Algorithm SHA256).Hash}
+$before=@(Get-WindowsDriver -Online -All)
+New-Item -ItemType Directory -Path $logRoot | Out-Null
+$before | Select-Object Driver,OriginalFileName,ProviderName,ClassName,Date,Version | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $logRoot 'drivere-for.json')
+$nodes | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $logRoot 'apple-enheter-for.json')
+$protectedBefore | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $logRoot 'beskyttede-apple-inf-for.json')
+[ordered]@{Thumbprint=$thumb;Subject=$sig.SignerCertificate.Subject;Signature=[string]$sig.Status;Catalog='Valid';Target='USB\VID_05AC&PID_1905';Command='pnputil.exe /add-driver <reviewed exact INF> (NO /install)'} | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $logRoot 'kontroll-for.json')
+# THE ONLY SYSTEM MUTATION: stage this exact reviewed package, no /install switch.
+& (Join-Path $env:windir 'System32/pnputil.exe') /add-driver $inf 2>&1 | Tee-Object -FilePath (Join-Path $logRoot 'pnputil.txt')
+$pnpexit=$LASTEXITCODE
+$after=@(Get-WindowsDriver -Online -All)
+$after | Select-Object Driver,OriginalFileName,ProviderName,ClassName,Date,Version | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $logRoot 'drivere-etter.json')
+Read-AppleNodes | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $logRoot 'apple-enheter-etter.json')
+foreach($name in $protected){if((Get-FileHash -LiteralPath (Join-Path $env:windir "INF/$name") -Algorithm SHA256).Hash-ne$protectedBefore[$name]){throw "Protected Apple INF changed: $name; see $logRoot"}}
+$deleted=@($before | Where-Object {$_.Driver-notin@($after.Driver)})
+if($deleted.Count){$deleted | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $logRoot 'uventet-slettede-pakker.json');throw 'Existing driver package inventory decreased; stop for review.'}
+$matching=@($after | Where-Object {[IO.Path]::GetFileName($_.OriginalFileName)-ieq'macmini_restore_1905.inf'})
+if($pnpexit-notin@(0,3010) -or $matching.Count-ne1){throw "Staging could not be verified (exit $pnpexit, exact original-name matches $($matching.Count)). See $logRoot"}
+$published=$matching[0].Driver
+if((Get-FileHash -LiteralPath (Join-Path $env:windir "INF/$published") -Algorithm SHA256).Hash-ne$expected['macmini_restore_1905.inf']){throw 'Published INF differs from reviewed package.'}
+[ordered]@{ExitCode=$pnpexit;PublishedName=$published;OriginalName='macmini_restore_1905.inf';InfSha256=$expected['macmini_restore_1905.inf'];HardwareId='USB\VID_05AC&PID_1905';StagedOnly=$true;InstallSwitchUsed=$false;ExistingPackagesDeleted=0;ProtectedAppleInfUnchanged=$true;LogDirectory=$logRoot;Note='A reused oem number does not identify the old RestoreKit package. Use original name and hash.'} | ConvertTo-Json | Tee-Object -FilePath (Join-Path $logRoot 'resultat.json')
+'Package staged only. No live driver binding was requested.'
+'If a reboot is requested, stop and discuss it; this script never reboots.'
+

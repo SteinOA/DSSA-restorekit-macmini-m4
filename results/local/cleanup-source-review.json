@@ -1,0 +1,22 @@
+{
+  "PS7Syntax": "PASS",
+  "PS5Syntax": "PASS",
+  "PS5DefaultInspect": {
+    "Mode": "INSPECT ONLY",
+    "InstanceId": "USB\\VID_05AC&PID_1905\\00008132-001808291EA2401C",
+    "NodeExists": false,
+    "Present": false,
+    "PublishedName": null,
+    "PackageHashFound": false,
+    "OriginalNameRequired": "macmini_restore_1905.inf",
+    "InfSha256": "96900A82E846BDE1999787C566D8B22DC52D108545B9E76FCAA4DA2F79334E02",
+    "PrivateKeyStillExists": false,
+    "CertificateOccurrences": [],
+    "NoActionNeeded": true,
+    "RemovalRetries": 0,
+    "PnPConvergenceWaitSeconds": 10
+  },
+  "HardwareCleanupPathsExecuted": false,
+  "DriverCertificateMutationPerformed": false,
+  "KnownOldIssue": "A missing space in Where-Object -ieq$id was found and fixed during Inspect; old post-removal abort may have the same cause, but its precise exception was not captured."
+}

@@ -1,0 +1,27 @@
+$ErrorActionPreference = 'Stop'
+$log = Join-Path $PSScriptRoot 'clear-old-mac-bindings.log'
+$expectedLocation = 'PCIROOT(0)#PCI(1400)#USBROOT(0)#USB(13)'
+$targetIds = @(
+ 'USB\VID_05AC&PID_F014\SDOM:01_CPID:0022_BDID:000000002A813200_ECID:165715DA257CBD11_CPFM:03_SCEP:00_CPRV:0A4_PREV:46_SYSI:8000000000010000_BFLG:0002',
+ 'USB\VID_05AC&PID_1281\SDOM:01_CPID:8132_CPRV:11_CPFM:03_SCEP:01_BDID:2A_ECID:001808291EA2401C_IBFL:FD_SIKA:00'
+)
+$present = @(Get-PnpDevice -PresentOnly)
+foreach ($id in $targetIds) {
+ if ($present.InstanceId -contains $id) { throw 'Historical target is now present; no changes performed.' }
+ $device = Get-PnpDevice -InstanceId $id -ErrorAction Stop
+ $properties = @(Get-PnpDeviceProperty -InstanceId $id)
+ $inf = ($properties | Where-Object KeyName -eq 'DEVPKEY_Device_DriverInfPath').Data
+ $paths = @(($properties | Where-Object KeyName -eq 'DEVPKEY_Device_LocationPaths').Data)
+ if ($inf -ne 'oem288.inf' -or $paths -notcontains $expectedLocation) { throw 'Historical target binding/location did not match.' }
+}
+$current = @($present | Where-Object InstanceId -match '^USB\\VID_05AC&PID_[0-9A-F]{4}\\')
+if ($current.Count -ne 1 -or $current[0].InstanceId -notmatch 'PID_1281\\.*ECID:001808291EA2401C_IBFL:BC') { throw 'Expected sole Mac in Recovery not found.' }
+$all = @(Get-CimInstance Win32_Process)
+if ($all | Where-Object Name -eq 'restorekit.exe') { throw 'A restore process exists; no changes performed.' }
+'Removing only two verified nonpresent device instances; no driver package removal.' | Set-Content -LiteralPath $log
+foreach ($id in $targetIds) {
+ 'ExactHistoricalInstance=' + $id | Add-Content -LiteralPath $log
+ & "$env:SystemRoot\System32\pnputil.exe" /remove-device $id | Add-Content -LiteralPath $log
+ if ($LASTEXITCODE -ne 0) { throw ('PnP removal failed exit=' + $LASTEXITCODE) }
+}
+'CurrentRecoveryInf=' + (Get-PnpDeviceProperty -InstanceId $current[0].InstanceId -KeyName DEVPKEY_Device_DriverInfPath).Data | Add-Content -LiteralPath $log

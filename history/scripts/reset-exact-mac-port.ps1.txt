@@ -1,0 +1,83 @@
+param([switch]$Cycle, [string]$SignalFile)
+$ErrorActionPreference = 'Stop'
+$expectedEcid = '165715DA257CBD11'
+$target = @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'USB\VID_05AC&PID_F014\*' -and $_.InstanceId -match "ECID:$expectedEcid(?:_|$)" })
+if ($target.Count -ne 1) { throw "Expected exactly one matching Port DFU target, found $($target.Count)" }
+$instance = $target[0].InstanceId
+$parent = (Get-PnpDeviceProperty -InstanceId $instance -KeyName DEVPKEY_Device_Parent).Data
+$location = (Get-PnpDeviceProperty -InstanceId $instance -KeyName DEVPKEY_Device_LocationInfo).Data
+if ($location -notmatch '^Port_#(\d+)\.Hub_#\d+$') { throw "Unrecognized port location: $location" }
+$port = [uint32]$Matches[1]
+if ($port -lt 1 -or $parent -notlike 'USB\*HUB*\*') { throw "Invalid parent or port" }
+Add-Type -TypeDefinition @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+public static class RkExactPort {
+ [StructLayout(LayoutKind.Sequential)] struct IFACE {public int cbSize; public Guid guid; public int flags; public IntPtr reserved;}
+ [StructLayout(LayoutKind.Sequential)] struct DEVINFO {public int cbSize; public Guid guid; public uint devInst; public IntPtr reserved;}
+ [DllImport("setupapi.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern IntPtr SetupDiGetClassDevs(ref Guid guid, string enumerator, IntPtr hwnd, uint flags);
+ [DllImport("setupapi.dll",SetLastError=true)] static extern bool SetupDiEnumDeviceInterfaces(IntPtr set, IntPtr devinfo, ref Guid guid, uint index, ref IFACE data);
+ [DllImport("setupapi.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern bool SetupDiGetDeviceInterfaceDetail(IntPtr set,ref IFACE iface,IntPtr detail,uint size,out uint needed,ref DEVINFO info);
+ [DllImport("setupapi.dll")] static extern bool SetupDiDestroyDeviceInfoList(IntPtr set);
+ [DllImport("cfgmgr32.dll",CharSet=CharSet.Unicode)] static extern int CM_Get_Device_ID(uint devInst,StringBuilder buffer,int size,uint flags);
+ [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern SafeFileHandle CreateFile(string path,uint access,uint share,IntPtr security,uint creation,uint flags,IntPtr template);
+ [DllImport("kernel32.dll",SetLastError=true)] static extern bool DeviceIoControl(SafeFileHandle h,uint code,byte[] input,int inSize,byte[] output,int outSize,out int returned,IntPtr overlapped);
+ static Exception Error(string what){return new Exception(what+" Win32="+Marshal.GetLastWin32Error());}
+ static string FindHub(string parent){
+  Guid guid=new Guid("f18a0e88-c30c-11d0-8815-00a0c906bed8");
+  IntPtr set=SetupDiGetClassDevs(ref guid,null,IntPtr.Zero,0x12);
+  if(set==new IntPtr(-1))throw Error("Enumerate hubs");
+  string found=null;
+  try {for(uint i=0;;i++){
+   IFACE iface=new IFACE();iface.cbSize=Marshal.SizeOf(typeof(IFACE));
+   if(!SetupDiEnumDeviceInterfaces(set,IntPtr.Zero,ref guid,i,ref iface)){if(Marshal.GetLastWin32Error()==259)break;throw Error("Enumerate hub interface");}
+   DEVINFO dev=new DEVINFO();dev.cbSize=Marshal.SizeOf(typeof(DEVINFO)); uint needed;
+   SetupDiGetDeviceInterfaceDetail(set,ref iface,IntPtr.Zero,0,out needed,ref dev);
+   IntPtr detail=Marshal.AllocHGlobal((int)needed);
+   try {Marshal.WriteInt32(detail,IntPtr.Size==8?8:6);
+    if(!SetupDiGetDeviceInterfaceDetail(set,ref iface,detail,needed,out needed,ref dev))throw Error("Read hub detail");
+    StringBuilder id=new StringBuilder(512);if(CM_Get_Device_ID(dev.devInst,id,id.Capacity,0)!=0)throw new Exception("CM_Get_Device_ID failed");
+    if(String.Equals(id.ToString(),parent,StringComparison.OrdinalIgnoreCase)){if(found!=null)throw new Exception("Ambiguous hub match");found=Marshal.PtrToStringUni(IntPtr.Add(detail,4));}
+   }finally{Marshal.FreeHGlobal(detail);}
+  }}finally{SetupDiDestroyDeviceInfoList(set);}
+  if(found==null)throw new Exception("Exact parent hub interface not found"); return found;
+ }
+ public static string Run(string parent,uint port,string ecid,bool cycle){
+  string path=FindHub(parent);
+  using(SafeFileHandle handle=CreateFile(path,0x40000000,3,IntPtr.Zero,3,0,IntPtr.Zero)){
+   if(handle.IsInvalid)throw Error("Open exact hub");
+   byte[] info=new byte[2048];Array.Copy(BitConverter.GetBytes(port),info,4);int returned;
+   if(!DeviceIoControl(handle,0x220448,info,info.Length,info,info.Length,out returned,IntPtr.Zero))throw Error("Read target USB descriptor");
+   ushort vid=BitConverter.ToUInt16(info,12),pid=BitConverter.ToUInt16(info,14);
+   if(vid!=0x05ac||pid!=0xf014)throw new Exception("Port descriptor does not match Apple Port DFU: "+vid.ToString("X4")+":"+pid.ToString("X4"));
+   byte serialIndex=info[20];if(serialIndex==0)throw new Exception("Target has no serial descriptor");
+   byte[] desc=new byte[12+255];Array.Copy(BitConverter.GetBytes(port),desc,4);desc[4]=0x80;desc[5]=6;desc[6]=serialIndex;desc[7]=3;desc[8]=9;desc[9]=4;desc[10]=255;
+   if(!DeviceIoControl(handle,0x220410,desc,desc.Length,desc,desc.Length,out returned,IntPtr.Zero))throw Error("Read target serial descriptor");
+   int len=desc[12];if(len<2||len>255||desc[13]!=3)throw new Exception("Invalid USB string descriptor");
+   string serial=Encoding.Unicode.GetString(desc,14,len-2);
+   if(serial.IndexOf("ECID:"+ecid,StringComparison.OrdinalIgnoreCase)<0)throw new Exception("Physical port ECID does not match expected target");
+   string report="VALIDATED parent="+parent+" port="+port+" VID=05AC PID=F014 serial="+serial;
+   if(!cycle)return report+"; read-only, no reset requested";
+   byte[] request=new byte[8];Array.Copy(BitConverter.GetBytes(port),request,4);
+   if(!DeviceIoControl(handle,0x220444,request,request.Length,request,request.Length,out returned,IntPtr.Zero))throw Error("Cycle exact target port");
+   uint status=BitConverter.ToUInt32(request,4);if(status!=0)throw new Exception("USB cycle status="+status.ToString("X8"));
+   return report+"; CYCLE SUCCESS";
+  }
+ }
+}
+"@
+if ($SignalFile) {
+    if (-not $Cycle) { throw '-SignalFile requires explicit -Cycle' }
+    if (Test-Path -LiteralPath $SignalFile) { throw 'Signal file already exists; refusing stale trigger' }
+    [RkExactPort]::Run($parent,$port,$expectedEcid,$false)
+    Write-Output "READY waiting for signal: $SignalFile"
+    $deadline = [DateTime]::UtcNow.AddSeconds(120)
+    while (-not (Test-Path -LiteralPath $SignalFile)) {
+        if ([DateTime]::UtcNow -gt $deadline) { throw 'Timed out; no USB cycle performed' }
+        Start-Sleep -Milliseconds 50
+    }
+}
+[RkExactPort]::Run($parent,$port,$expectedEcid,$Cycle.IsPresent)
+

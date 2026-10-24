@@ -1,0 +1,64 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "RestoreKit",
+  "version": "0.5.13",
+  "identifier": "com.leftshift.restorekit.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "beforeBundleCommand": "node scripts/prepare-appimage.mjs"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "RestoreKit",
+        "width": 1080,
+        "height": 740,
+        "minWidth": 860,
+        "minHeight": 600,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "copyright": "© 2026 Frank Chiarulli Jr.",
+    "createUpdaterArtifacts": true,
+    "targets": ["app", "dmg", "deb", "appimage", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": ["binaries/helper"],
+    "linux": {
+      "deb": {
+        "files": {
+          "/etc/udev/rules.d/51-restorekit.rules": "../../../udev/51-restorekit.rules"
+        }
+      }
+    },
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "entitlements": "entitlements.plist",
+      "files": {
+        "Library/LaunchDaemons/com.leftshift.restorekit.helper.plist": "launchd/com.leftshift.restorekit.helper.plist"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIwMjU4NEIzOEU5RDgyNjcKUldSbmdwMk9zNFFsc0dmK2Vna2Z4Qm1KdDN6Rmd0bU92MGd4RC9LK2JpQVZrRlpBTk9FNERva3EK",
+      "endpoints": [
+        "https://github.com/fcjr/restorekit/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

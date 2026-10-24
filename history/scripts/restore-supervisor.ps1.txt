@@ -1,0 +1,189 @@
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+Set-Location -LiteralPath $root
+$tag = 'attempt3-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,8)
+$statusFile = Join-Path $PSScriptRoot 'restore-supervisor-status.txt'
+$supervisorLog = Join-Path $PSScriptRoot ($tag + '-supervisor.log')
+$stdout = Join-Path $PSScriptRoot ($tag + '-stdout.log')
+$stderr = Join-Path $PSScriptRoot ($tag + '-stderr.log')
+$exe = Join-Path $PSScriptRoot 'restorekit-source\target\x86_64-pc-windows-gnu\release\restorekit.exe'
+$ipsw = Join-Path $PSScriptRoot 'firmware\UniversalMac_15.6.1_24G90_Restore.ipsw'
+$helperSource = Join-Path $PSScriptRoot 'ExactMacPort.cs'
+$cache = Join-Path $PSScriptRoot 'firmware'
+$inf = 'C:\Windows\INF\oem288.inf'
+$locationPrefix = 'PCIROOT(0)#PCI(1400)#USBROOT(0)#USB(13)'
+$native = $null; $exitCode = 1; $portCycleSent = $false; $socCycleSent = $false
+$socEcid = $null; $phaseText = ''; $parentHub = $null
+$offsets = @{}; $textWindow = ''; $failureSeen = $false
+$bound = @{}
+function Status([string]$message) {
+    $line = (Get-Date -Format o) + ' ' + $message
+    Add-Content -LiteralPath $supervisorLog -Value $line
+    Set-Content -LiteralPath $statusFile -Value $line
+    Write-Output $line
+}
+function Read-NewLog([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return '' }
+    $stream = [IO.File]::Open($path,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
+    try {
+        $position = 0L
+        if ($offsets.ContainsKey($path)) { $position = [long]$offsets[$path] }
+        if ($position -gt $stream.Length) { $position = 0L }
+        [void]$stream.Seek($position,[IO.SeekOrigin]::Begin)
+        $reader = [IO.StreamReader]::new($stream,[Text.Encoding]::UTF8,$true,4096,$true)
+        try { $value = $reader.ReadToEnd(); $offsets[$path] = $stream.Position; return $value }
+        finally { $reader.Dispose() }
+    } finally { $stream.Dispose() }
+}
+function At-TargetPort([string]$id) {
+    $paths = @((Get-PnpDeviceProperty -InstanceId $id -KeyName DEVPKEY_Device_LocationPaths -ErrorAction Stop).Data)
+    foreach ($path in $paths) {
+        if ($path -eq $locationPrefix -or $path.StartsWith($locationPrefix + '#',[StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+    return $false
+}
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class RestoreSupervisorNative {
+ [DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint flags);
+ [DllImport("newdev.dll",CharSet=CharSet.Unicode,SetLastError=true)]
+ [return:MarshalAs(UnmanagedType.Bool)] public static extern bool UpdateDriverForPlugAndPlayDevices(IntPtr hwnd,string hardwareId,string inf,uint flags,[MarshalAs(UnmanagedType.Bool)] out bool reboot);
+}
+'@
+# Separate runspace keeps slow PnP/driver calls off the 100 ms reset monitor.
+$driverWorker = {
+    param($nativePid,$locationPrefix,$inf,$bound)
+    $ErrorActionPreference = 'Stop'
+    function At-TargetPort([string]$id) {
+        $paths = @((Get-PnpDeviceProperty -InstanceId $id -KeyName DEVPKEY_Device_LocationPaths -ErrorAction Stop).Data)
+        foreach ($path in $paths) {
+            if ($path -eq $locationPrefix -or $path.StartsWith($locationPrefix + '#',[StringComparison]::OrdinalIgnoreCase)) { return $true }
+        }
+        return $false
+    }
+    try {
+        $present = @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '^USB\\VID_05AC&PID_' })
+        foreach ($pnp in $present) {
+            try {
+            if (-not (Get-Process -Id $nativePid -ErrorAction SilentlyContinue)) { break }
+            if ($pnp.InstanceId -notmatch '^USB\\VID_05AC&PID_([0-9A-F]{4})') { continue }
+            $pidHex = $Matches[1].ToUpperInvariant()
+            $standard = $pidHex -in @('1227','1280','1281','1282','1283','1881')
+            $qualified = $pidHex -match '^12[0-9A-F]{2}$' -and $pnp.InstanceId -match '&RESTORE_MODE&MI_00\\'
+            if (-not ($standard -or $qualified)) { continue }
+            if (-not (At-TargetPort $pnp.InstanceId)) { continue }
+            $driverInf = (Get-PnpDeviceProperty -InstanceId $pnp.InstanceId -KeyName DEVPKEY_Device_DriverInfPath -ErrorAction Stop).Data
+            if ($driverInf -ieq 'oem288.inf') { continue }
+            $hardwareIds = @((Get-PnpDeviceProperty -InstanceId $pnp.InstanceId -KeyName DEVPKEY_Device_HardwareIds).Data)
+            $hardwareId = $pnp.InstanceId -replace '\\[^\\]+$', ''
+            if (-not $hardwareId) { throw 'Target has no matching hardware ID' }
+            # UpdateDriver matches a hardware ID globally: exclude any present matching device elsewhere.
+            foreach ($other in $present) {
+                if ($other.InstanceId -eq $pnp.InstanceId) { continue }
+                $otherIds = @((Get-PnpDeviceProperty -InstanceId $other.InstanceId -KeyName DEVPKEY_Device_HardwareIds -ErrorAction Stop).Data)
+                if ($otherIds -contains $hardwareId -and -not (At-TargetPort $other.InstanceId)) { throw 'Driver hardware ID also matches an Apple device outside the target port' }
+            }
+            $key = $pnp.InstanceId + '|' + $driverInf
+            if ($bound.ContainsKey($key)) { continue }
+            Write-Output "Binding exact target device $($pnp.InstanceId) to oem288.inf"
+            $reboot = $false
+            $ok = [RestoreSupervisorNative]::UpdateDriverForPlugAndPlayDevices([IntPtr]::Zero,$hardwareId,$inf,5,[ref]$reboot)
+            $winError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            $bound[$key] = $true
+            Write-Output "Driver bind result=$ok Win32=$winError reboot=$reboot"
+            if (-not $ok) { throw "Exact target driver binding failed Win32=$winError" }
+            } catch { Write-Output ('Skipped driver check: ' + $_.Exception.Message); continue }
+        }
+
+    } catch { Write-Output ('Driver enumeration deferred: ' + $_.Exception.Message) }
+}
+$driverPipeline = $null; $driverAsync = $null; $nextDriverCheck = [DateTime]::MinValue
+try {
+    $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Supervisor requires administrator privileges' }
+    foreach ($path in @($exe,$ipsw,$helperSource,$inf)) { if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing required file: $path" } }
+    Add-Type -Path $helperSource
+    if ((Get-Item -LiteralPath $ipsw).Length -ne 16814137790) { throw 'Unexpected firmware size' }
+    if ([RestoreSupervisorNative]::SetThreadExecutionState(2147483649) -eq 0) { throw 'Could not hold system awake' }
+    Status 'Validating exactly one Mac mini M4 in DFU'
+    $raw = & $exe --json list
+    if ($LASTEXITCODE -ne 0) { throw 'Device listing failed' }
+    $state = ($raw -join "`n") | ConvertFrom-Json
+    $devices = @($state.devices)
+    if ($devices.Count -ne 1) { throw "Expected one Apple device; found $($devices.Count)" }
+    $device = $devices[0]
+    if ($device.identity.model.identifier -ne 'Mac16,10' -or $device.mode -ne 'dfu') { throw 'Expected Mac16,10 in dfu mode' }
+    $ecid = '0x{0:x}' -f [UInt64]$device.ecid
+    if ($ecid -ne '0x165715da257cbd11') { throw 'Unexpected target ECID' }
+    $portDevices = @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match '^USB\\VID_05AC&PID_F014\\.*ECID:165715DA257CBD11(?:_|$)' })
+    if ($portDevices.Count -ne 1 -or -not (At-TargetPort $portDevices[0].InstanceId)) { throw 'Expected controller on exact authorized USB location' }
+    $parentHub = (Get-PnpDeviceProperty -InstanceId $portDevices[0].InstanceId -KeyName DEVPKEY_Device_Parent).Data
+    $portLocation = (Get-PnpDeviceProperty -InstanceId $portDevices[0].InstanceId -KeyName DEVPKEY_Device_LocationInfo).Data
+    if ($portLocation -notmatch '^Port_#0013\.Hub_#\d+$' -or $parentHub -ne 'USB\ROOT_HUB30\4&2720bdb3&0&0') { throw 'Unexpected physical hub or port' }
+    Status ([RkExactPort]::Run($parentHub,13,'165715DA257CBD11',0xf014,$false))
+    Status 'Physical controller validated; starting single authorized restore attempt'
+    $nativeArgs = '--verbose restore --ipsw "' + $ipsw + '" --ecid ' + $ecid + ' --yes --cache-dir "' + $cache + '"'
+    $native = Start-Process -FilePath $exe -ArgumentList $nativeArgs -WorkingDirectory $root -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+    [void]$native.Handle
+    Status "Restore running PID=$($native.Id); stdout=$stdout; stderr=$stderr"
+    while (-not $native.HasExited) {
+        # Stage-specific physical cycles are checked before slow PnP queries.
+        $newText = (Read-NewLog $stdout) + (Read-NewLog $stderr)
+        if ($newText) { $textWindow += $newText; if ($textWindow.Length -gt 30000) { $textWindow = $textWindow.Substring($textWindow.Length-30000) } }
+        if ($textWindow -match '(?i)Device did not disconnect\.|Device did not reconnect .*Port DFU failed|Device did not reconnect .*Possibly invalid|Unable to send iBSS to device|Port DFU failed\.|Restore failed:|Restoration failed:') { $failureSeen = $true }
+        $phaseText += $newText
+        if (-not $portCycleSent -and -not $failureSeen -and $phaseText -match '(?s)Sending data \(41465 bytes\).*?Waiting for device to disconnect') {
+            $portCycleSent = $true # Latch before call: never retry, even on error.
+            Status 'PortDFU payload disconnect wait observed; cycling validated F014 controller once'
+            Status ([RkExactPort]::Run($parentHub,13,'165715DA257CBD11',0xf014,$true))
+            $phaseText = '' # Old disconnect message cannot qualify for iBSS stage.
+        } elseif ($portCycleSent -and -not $socCycleSent -and -not $failureSeen -and $phaseText -match '(?s)Port DFU restore successful\..*?Sending iBSS.*?Waiting for device to disconnect') {
+            $physical = $null
+            try { $physical = [RkExactPort]::Inspect($parentHub,13) } catch { } # Transitional/no-device state: no reset.
+            if ($physical -and $physical -match '^VID=05AC PID=1227 ECID=([0-9A-Fa-f]{1,16}) serial=') {
+                $observedEcid = $Matches[1].ToUpperInvariant()
+                if ($physical -notmatch '(?:^| )CPID:0*8132(?: |$)' -or $physical -notmatch '(?:^| )BDID:0*2A(?: |$)') { throw 'Physical SoC DFU identity does not match M4 CPID8132 BDID2A' }
+                if (-not $socEcid) { $socEcid = $observedEcid; Status "Latched physical SoC identity: $physical" }
+                if ($socEcid -ne $observedEcid) { throw 'Physical SoC ECID changed after latch' }
+                $socCycleSent = $true # Set before physical operation; no retry.
+                Status 'iBSS disconnect wait observed after PortDFU success; cycling validated1227 SoC once'
+                Status ([RkExactPort]::Run($parentHub,13,$socEcid,0x1227,$true))
+                $phaseText = ''
+            }
+        }
+        if ($driverAsync -and $driverAsync.IsCompleted) {
+            try { foreach ($message in $driverPipeline.EndInvoke($driverAsync)) { Status ([string]$message) } }
+            catch { Status ('Driver watcher warning: ' + $_.Exception.Message) }
+            $driverPipeline.Dispose(); $driverPipeline = $null; $driverAsync = $null
+            $nextDriverCheck = [DateTime]::UtcNow.AddSeconds(1)
+        }
+        if (-not $driverAsync -and [DateTime]::UtcNow -ge $nextDriverCheck -and -not $native.HasExited) {
+            $driverPipeline = [PowerShell]::Create()
+            [void]$driverPipeline.AddScript($driverWorker.ToString()).AddArgument($native.Id).AddArgument($locationPrefix).AddArgument($inf).AddArgument($bound)
+            $driverAsync = $driverPipeline.BeginInvoke()
+        }
+        Start-Sleep -Milliseconds 100
+    }
+    $native.WaitForExit()
+    $native.Refresh()
+    $exitCode = $native.ExitCode
+    if ($null -eq $exitCode) { $exitCode = 1; Status 'Native exit code unavailable; inspect native logs' }
+    Status "Restore exited code=$exitCode; PortDFUcycle=$portCycleSent; SoCcycle=$socCycleSent; no retries will run"
+} catch {
+    Status ('Supervisor stopped: ' + $_.Exception.Message)
+    $exitCode = 1
+} finally {
+    # Never kill active restoration due to a supervisory/PnP problem.
+    if ($native -and -not $native.HasExited) { Status "MANUAL MONITOR REQUIRED: native PID=$($native.Id) remains running; stdout=$stdout; stderr=$stderr" }
+    if ($driverPipeline) {
+        try {
+            if ($driverAsync -and -not $driverAsync.IsCompleted) { $driverPipeline.Stop() }
+            if ($driverAsync -and $driverAsync.IsCompleted) { foreach ($message in $driverPipeline.EndInvoke($driverAsync)) { Status ([string]$message) } }
+        } catch { Status ('Driver watcher cleanup: ' + $_.Exception.Message) }
+        $driverPipeline.Dispose()
+    }
+    [void][RestoreSupervisorNative]::SetThreadExecutionState(2147483648)
+    Status "Supervisor finished exit=$exitCode; logs retained under $tag"
+}
+exit $exitCode

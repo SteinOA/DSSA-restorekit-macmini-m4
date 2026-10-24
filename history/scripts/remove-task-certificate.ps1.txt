@@ -1,0 +1,71 @@
+$ErrorActionPreference='Stop'
+$thumb='4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31'
+$root=Split-Path -Parent $PSScriptRoot
+$out=Join-Path $root 'outputs\Sertifikat-sluttlogg'
+New-Item -ItemType Directory -Path $out -Force | Out-Null
+$log=Join-Path $out 'opprydding.log'
+function Log([string]$message) { $line=(Get-Date -Format o)+' '+$message; Add-Content -LiteralPath $log -Value $line; Write-Host $line }
+function Find-TaskCertificate {
+ foreach($scope in @('Cert:\LocalMachine','Cert:\CurrentUser')) {
+  foreach($item in @(Get-ChildItem -Path $scope -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Thumbprint -eq $thumb})) {
+   $pathMatch=[regex]::Match($item.PSPath,'Certificate::((?:CurrentUser|LocalMachine)\\[^\\]+)\\([A-F0-9]{40})$')
+   if(!$pathMatch.Success) { throw 'Unexpected certificate provider path.' }
+   [pscustomobject]@{Path=('Cert:\'+$pathMatch.Groups[1].Value+'\'+$pathMatch.Groups[2].Value);Thumbprint=$item.Thumbprint;Subject=$item.Subject;HasPrivateKey=$item.HasPrivateKey}
+  }
+ }
+}
+try {
+ $principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+ if(!$principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { throw 'Administrator required for machine-store cleanup.' }
+ if(Get-Process restorekit -ErrorAction SilentlyContinue) { throw 'Restore process is still running; do not remove its signing trust yet.' }
+ $myPath='Cert:\CurrentUser\My\'+$thumb
+ $cert=Get-Item -LiteralPath $myPath
+ if($cert.Subject -ne 'CN=RestoreKit WinUSB' -or $cert.Thumbprint -ne $thumb -or !$cert.HasPrivateKey) { throw 'Exact task signing certificate/private key not found.' }
+ $basic=@($cert.Extensions | Where-Object {$_.Oid.Value -eq '2.5.29.19'})
+ $ca=$null
+ if($basic.Count) { $decoded=[Security.Cryptography.X509Certificates.X509BasicConstraintsExtension]::new($basic[0],$basic[0].Critical); $ca=$decoded.CertificateAuthority }
+ $rsa=[Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
+ if($rsa -isnot [Security.Cryptography.RSACng]) { throw 'Unexpected key provider; stop before deletion.' }
+ $keyName=$rsa.Key.KeyName; $providerName=$rsa.Key.Provider.Provider; $machine=$rsa.Key.IsMachineKey
+ if($keyName -ne 'te-6087c5f9-045d-456f-935e-20cc89e024a0' -or $providerName -ne 'Microsoft Software Key Storage Provider' -or $machine) { throw 'Private-key container does not match the observed task key.' }
+ $rsa.Dispose()
+ $before=@(Find-TaskCertificate)
+ [pscustomobject]@{Time=(Get-Date -Format o);Thumbprint=$thumb;Subject=$cert.Subject;BasicConstraintsPresent=($basic.Count -gt 0);CertificateAuthority=$ca;KeyName=$keyName;KeyProvider=$providerName;IsMachineKey=$machine;Certificates=$before} | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $out 'for.json')
+ Log "Exact certificate thumbprint=$thumb; BasicConstraintsPresent=$($basic.Count -gt 0); CA=$ca; occurrences=$($before.Count)"
+ $cert.Dispose()
+ # Remove machine trust first; CurrentUser views can include inherited machine entries.
+ foreach($entry in @($before | Where-Object {$_.Path -ine $myPath} | Sort-Object @{Expression={if($_.Path -like 'Cert:\LocalMachine\*'){0}else{1}}},Path)) {
+  if(Test-Path -LiteralPath $entry.Path) {
+   try { Remove-Item -LiteralPath $entry.Path -Confirm:$false -ErrorAction Stop; Log ('Removed certificate '+$entry.Path) }
+   catch { Log ('Certificate removal warning '+$entry.Path+': '+$_.Exception.Message) }
+  } else { Log ('Already absent after machine-trust removal '+$entry.Path) }
+ }
+ Remove-Item -LiteralPath $myPath -DeleteKey -Confirm:$false -ErrorAction Stop
+ Log ('Removed personal certificate WITH DeleteKey '+$myPath)
+ $provider=[Security.Cryptography.CngProvider]::new($providerName)
+ $keyExists=[Security.Cryptography.CngKey]::Exists($keyName,$provider,[Security.Cryptography.CngKeyOpenOptions]::None)
+ if($keyExists) {
+  # Exact existing container only; Open never creates a key.
+  $remainingKey=[Security.Cryptography.CngKey]::Open($keyName,$provider,[Security.Cryptography.CngKeyOpenOptions]::None)
+  $remainingKey.Delete(); $remainingKey.Dispose()
+  Log ('Deleted exact persisted CNG container '+$keyName)
+ }
+ $after=@(Find-TaskCertificate)
+ foreach($entry in $after) {
+  if($entry.HasPrivateKey) { Remove-Item -LiteralPath $entry.Path -DeleteKey -Confirm:$false -ErrorAction Stop }
+  else { Remove-Item -LiteralPath $entry.Path -Confirm:$false -ErrorAction Stop }
+  Log ('Removed remaining exact certificate '+$entry.Path)
+ }
+ $after=@(Find-TaskCertificate)
+ $keyExists=[Security.Cryptography.CngKey]::Exists($keyName,$provider,[Security.Cryptography.CngKeyOpenOptions]::None)
+ $driverList=& "$env:SystemRoot\System32\pnputil.exe" /enum-drivers
+ if($LASTEXITCODE -ne 0) { throw 'Cannot verify old RestoreKit package absence.' }
+ $driverList | Set-Content -LiteralPath (Join-Path $out 'driverpakker-etter.txt')
+ $oldPackage=[bool](($driverList -join "`n") -match '(?im)^Original Name:\s*restorekit_winusb\.inf\s*$')
+ $newPackage=[bool](($driverList -join "`n") -match '(?im)^Original Name:\s*macmini_restore_1905\.inf\s*$')
+ $result=[pscustomobject]@{Time=(Get-Date -Format o);Thumbprint=$thumb;BasicConstraintsPresent=($basic.Count -gt 0);CertificateAuthority=$ca;LocalMachineRootPresent=[bool](Test-Path -LiteralPath ('Cert:\LocalMachine\Root\'+$thumb));LocalMachineTrustedPublisherPresent=[bool](Test-Path -LiteralPath ('Cert:\LocalMachine\TrustedPublisher\'+$thumb));CurrentUserMyPresent=[bool](Test-Path -LiteralPath $myPath);RemainingCertificateOccurrences=$after;RemainingCertificateCount=$after.Count;PrivateKeyContainer=$keyName;PrivateKeyStillExists=$keyExists;OldRestoreKitPackagePresent=$oldPackage;New1905PackageInstalled=$newPackage;SecuritySettingsChanged=$false}
+ $result | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $out 'sluttkontroll.json')
+ Log "FINAL remaining certificates=$($after.Count); private key exists=$keyExists; old RestoreKit package exists=$oldPackage; new1905 installed=$newPackage"
+ if($after.Count -ne 0 -or $keyExists -or $oldPackage -or $newPackage) { throw 'Final cleanup check did not pass; inspect final log.' }
+ Log 'PASS: exact task certificate absent from all enumerated stores; private key absent; both driver packages absent. No test-signing/signature-enforcement/Secure Boot settings changed.'
+} catch { Log ('STOPPED: '+$_.Exception.Message); exit 1 }

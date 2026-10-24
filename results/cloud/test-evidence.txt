@@ -1,0 +1,18 @@
+windows (155921)	Compile and run Windows regressions and deterministic fuzz	2026-10-24T03:35:11.9722397Z restore identity fixtures passed (pure data; no USB access)
+windows (155921)	Compile and run Windows regressions and deterministic fuzz	2026-10-24T03:35:12.0535544Z PASS seed=155921 cases=100000 pure-data malformed fuzz and identity oracle
+windows (104729)	Compile and run Windows regressions and deterministic fuzz	2026-10-24T03:35:12.4267939Z restore identity fixtures passed (pure data; no USB access)
+windows (104729)	Compile and run Windows regressions and deterministic fuzz	2026-10-24T03:35:12.5070734Z PASS seed=104729 cases=100000 pure-data malformed fuzz and identity oracle
+windows (130363)	Compile and run Windows regressions and deterministic fuzz	2026-10-24T03:35:13.9309619Z restore identity fixtures passed (pure data; no USB access)
+windows (130363)	Compile and run Windows regressions and deterministic fuzz	2026-10-24T03:35:14.0113494Z PASS seed=130363 cases=100000 pure-data malformed fuzz and identity oracle
+linux (clang, 130363)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:35:07.4527531Z restore identity fixtures passed (pure data; no USB access)
+linux (clang, 130363)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:35:07.5206396Z PASS seed=130363 cases=100000 pure-data malformed fuzz and identity oracle
+linux (clang, 104729)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:58.0487619Z restore identity fixtures passed (pure data; no USB access)
+linux (clang, 104729)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:58.1091123Z PASS seed=104729 cases=100000 pure-data malformed fuzz and identity oracle
+linux (clang, 155921)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:35:03.8965275Z restore identity fixtures passed (pure data; no USB access)
+linux (clang, 155921)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:35:03.9564960Z PASS seed=155921 cases=100000 pure-data malformed fuzz and identity oracle
+linux (gcc, 104729)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:55.7710235Z restore identity fixtures passed (pure data; no USB access)
+linux (gcc, 104729)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:55.9209633Z PASS seed=104729 cases=100000 pure-data malformed fuzz and identity oracle
+linux (gcc, 155921)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:55.2669464Z restore identity fixtures passed (pure data; no USB access)
+linux (gcc, 155921)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:55.4447496Z PASS seed=155921 cases=100000 pure-data malformed fuzz and identity oracle
+linux (gcc, 130363)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:57.6361244Z restore identity fixtures passed (pure data; no USB access)
+linux (gcc, 130363)	Compile and run sanitizer regressions and deterministic fuzz	2026-10-24T03:34:57.7969296Z PASS seed=130363 cases=100000 pure-data malformed fuzz and identity oracle

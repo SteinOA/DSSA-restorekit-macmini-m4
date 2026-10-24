@@ -1,0 +1,265 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  appimage:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_INCREMENTAL: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install AppImage build and smoke-test deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
+            libayatana-appindicator3-dev patchelf xvfb xauth xdotool openbox dbus-x11 x11-utils \
+            build-essential autoconf automake libtool pkg-config cmake autoconf-archive \
+            libusb-1.0-0-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Test AppImage launcher preparation
+        run: node --test apps/desktop/scripts/prepare-appimage.test.mjs
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build AppImage without release credentials
+        working-directory: apps/desktop
+        run: |
+          bash ./stage-helper.sh
+          pnpm tauri build --bundles appimage --no-sign
+
+      - name: Check AppImage permissions and GUI startup
+        run: bash apps/desktop/scripts/check-appimage.sh apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+          - os: ubuntu-24.04
+          - os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.os }}
+    env:
+      # Incremental compilation only helps local rebuild loops; on CI it just
+      # bloats the target cache.
+      CARGO_INCREMENTAL: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Linux build deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential autoconf automake libtool pkg-config cmake autoconf-archive \
+            libusb-1.0-0-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
+
+      - name: Install macOS build deps
+        if: runner.os == 'macOS'
+        run: brew install autoconf automake libtool pkg-config cmake autoconf-archive
+
+      - name: Install Rust toolchain
+        id: toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update \
+            --component rustfmt --component clippy
+          rustup default stable
+          echo "version=$(rustc --version | tr ' ' '-' | tr -d '()')" >> "$GITHUB_OUTPUT"
+
+      - name: Hash vendored C source pins
+        id: pins
+        run: echo "hash=$(git submodule status --recursive | git hash-object --stdin)" >> "$GITHUB_OUTPUT"
+
+      # target/ includes the vendored C stack's staging prefix, and build.rs
+      # skips any library whose .built-* marker is present without watching the
+      # vendor tree — so everything staging validity depends on (submodule
+      # pins, rustc, build.rs) stays in the restore-keys prefix. Only
+      # Cargo.lock may differ on a partial match: a lock change that touches
+      # the -sys deps moves OUT_DIR's hash, which orphans the old staging
+      # rather than reusing it.
+      - name: Cache cargo registry + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: rust-ci-${{ matrix.os }}-${{ steps.toolchain.outputs.version }}-${{ steps.pins.outputs.hash }}-${{ hashFiles('crates/restorekit-sys/build.rs') }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            rust-ci-${{ matrix.os }}-${{ steps.toolchain.outputs.version }}-${{ steps.pins.outputs.hash }}-${{ hashFiles('crates/restorekit-sys/build.rs') }}-
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+  # The RP2350 dongle firmware is a standalone bare-metal crate (excluded from
+  # the workspace), so the workspace jobs never touch it; build it on its own.
+  firmware:
+    runs-on: ubuntu-24.04
+    env:
+      CARGO_INCREMENTAL: 0
+    defaults:
+      run:
+        working-directory: crates/dongle-lite-fw
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        id: toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update \
+            --component rustfmt
+          rustup default stable
+          rustup target add thumbv8m.main-none-eabihf
+          echo "version=$(rustc --version | tr ' ' '-' | tr -d '()')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache cargo registry + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            ~/.cargo/bin/flip-link
+            crates/dongle-lite-fw/target
+          key: rust-fw-${{ steps.toolchain.outputs.version }}-${{ hashFiles('crates/dongle-lite-fw/Cargo.lock') }}
+          restore-keys: |
+            rust-fw-${{ steps.toolchain.outputs.version }}-
+
+      # The firmware links through flip-link (see .cargo/config.toml).
+      - name: Install flip-link
+        run: command -v flip-link || cargo install flip-link --locked
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Build bootloader
+        working-directory: crates/dongle-lite-boot
+        run: cargo build --release
+
+  # Windows is a separate job (not a `test` matrix entry) because it needs the
+  # GNU toolchain and an MSYS2 MINGW64 shell: the vendored C stack is built with
+  # autotools, which can't target MSVC.
+  test-windows:
+    runs-on: windows-latest
+    env:
+      # Full debuginfo makes GNU ld crawl linking the test binaries against the
+      # big static C stack (and bloats the target cache). Line tables keep
+      # file:line backtraces on CI failures.
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+      CARGO_INCREMENTAL: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # GNU host toolchain: build scripts link with ld, not MSVC's link.exe
+      # (which MSYS2's coreutils `link` would shadow in the MINGW64 shell).
+      - name: Install Rust toolchain (windows-gnu)
+        id: toolchain
+        shell: bash
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal --no-self-update
+          rustup default stable-x86_64-pc-windows-gnu
+          echo "version=$(rustc --version | tr ' ' '-' | tr -d '()')" >> "$GITHUB_OUTPUT"
+
+      - name: Hash vendored C source pins
+        id: pins
+        shell: bash
+        run: echo "hash=$(git submodule status --recursive | git hash-object --stdin)" >> "$GITHUB_OUTPUT"
+
+      # Same prefix rule as the test job above: pins, rustc, and build.rs stay
+      # in the restore-keys prefix so a restored staging always matches the
+      # vendor sources; only Cargo.lock may vary on a partial match.
+      - name: Cache cargo registry + target
+        id: rust-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: rust-ci-windows-gnu-${{ steps.toolchain.outputs.version }}-${{ steps.pins.outputs.hash }}-${{ hashFiles('crates/restorekit-sys/build.rs') }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            rust-ci-windows-gnu-${{ steps.toolchain.outputs.version }}-${{ steps.pins.outputs.hash }}-${{ hashFiles('crates/restorekit-sys/build.rs') }}-
+
+      # The target cache above carries the staging prefix too, but it's
+      # multi-GB and first in line for LRU eviction under the repo's 10 GB
+      # cache quota; this small cache keeps the ~10 minutes of autotools under
+      # MSYS2 safe across evictions. Keyed on the exact submodule pins
+      # (build.rs doesn't watch the vendor tree, so a stale prefix would be
+      # used silently), plus rustc (OUT_DIR's hash moves with the compiler) and
+      # Cargo.lock (the -sys crates' headers the stack compiles against). No
+      # restore-keys: a partial match must rebuild, not reuse.
+      - name: Cache vendored C stack
+        id: c-stack
+        uses: actions/cache@v4
+        with:
+          path: target/x86_64-pc-windows-gnu/debug/build/restorekit-sys-*/out/staging
+          key: windows-c-stack-${{ steps.pins.outputs.hash }}-${{ steps.toolchain.outputs.version }}-${{ hashFiles('crates/restorekit-sys/build.rs', 'Cargo.lock') }}
+
+      # With both caches hot, nothing runs autotools (staging markers skip the
+      # C stack) or rebuilds openssl-src (the target cache has it), so the full
+      # toolbox — base-devel, autotools, perl, cmake, nasm, ~835 MiB — is dead
+      # weight; install only what the warm path uses: gcc + binutils for
+      # build.rs's cc step and the final link, pkgconf + libusb for the libusb
+      # probe, and POSIX `patch` (build.rs applies the idevicerestore patches
+      # with `patch`, not `git apply`). Either cache missing falls back to the
+      # full set (base-devel already bundles `patch`).
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          # Skip the full pacman -Syuu (~12s); the action's bundled MSYS2 base
+          # is refreshed regularly, and the packages below install current
+          # versions regardless. Flip back to true if pacman ever complains
+          # about a base/package mismatch.
+          update: false
+          install: >-
+            ${{ (steps.c-stack.outputs.cache-hit == 'true' && steps.rust-cache.outputs.cache-hit == 'true')
+                && 'git patch mingw-w64-x86_64-gcc mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libusb'
+                || 'base-devel git make autoconf automake libtool autoconf-archive gettext-devel pkgconf perl mingw-w64-x86_64-gcc mingw-w64-x86_64-pkgconf mingw-w64-x86_64-cmake mingw-w64-x86_64-libusb mingw-w64-x86_64-nasm' }}
+
+      - name: Test (windows-gnu, static C stack under MSYS2)
+        shell: msys2 {0}
+        run: |
+          export PATH="/c/Users/runneradmin/.cargo/bin:$PATH"
+          cargo test --workspace --target x86_64-pc-windows-gnu

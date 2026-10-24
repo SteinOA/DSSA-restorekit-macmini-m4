@@ -1,0 +1,23 @@
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+$all = @(Get-CimInstance Win32_Process)
+$ownAudit = $all | Where-Object ProcessId -eq $PID
+$relevant = @($all | Where-Object {
+    $_.Name -match '^(restorekit|irecovery|idevice[^.]*|usbmuxd)\.exe$' -or
+    ($_.Name -in @('powershell.exe','pwsh.exe') -and
+     ($_.CommandLine -match 'restorekit|restore-supervisor|restore-live|ExactMacPort|apple-driver-read-test|force-dfu-driver' -or
+      ($_.CommandLine -and $_.CommandLine.Contains($root))))
+} | ForEach-Object {
+    [pscustomobject]@{ProcessId=$_.ProcessId;ParentProcessId=$_.ParentProcessId;Name=$_.Name;CreationDate=$_.CreationDate;ExecutablePath=$_.ExecutablePath;CommandLine=$_.CommandLine;CurrentAudit=($_.ProcessId -eq $PID -or $_.ProcessId -eq $ownAudit.ParentProcessId)}
+})
+$devices = @(Get-PnpDevice -PresentOnly | Where-Object InstanceId -like 'USB\VID_05AC*' | ForEach-Object {
+    $properties = @(Get-PnpDeviceProperty -InstanceId $_.InstanceId)
+    [pscustomobject]@{Name=$_.FriendlyName;Status=$_.Status;InstanceId=$_.InstanceId;Inf=($properties | Where-Object KeyName -eq 'DEVPKEY_Device_DriverInfPath').Data;Service=($properties | Where-Object KeyName -eq 'DEVPKEY_Device_Service').Data;LocationPaths=($properties | Where-Object KeyName -eq 'DEVPKEY_Device_LocationPaths').Data}
+})
+$listeners = @(Get-NetTCPConnection -State Listen -LocalPort 27015 -ErrorAction SilentlyContinue | ForEach-Object {
+    $ownerId = $_.OwningProcess
+    $owner = $all | Where-Object ProcessId -eq $ownerId
+    [pscustomobject]@{LocalAddress=$_.LocalAddress;LocalPort=$_.LocalPort;OwningProcess=$ownerId;ProcessName=$owner.Name;ExecutablePath=$owner.ExecutablePath}
+})
+$tempFiles = @(Get-ChildItem -LiteralPath $env:TEMP -Filter 'restorekit-restore-*' -ErrorAction SilentlyContinue | Select-Object Name,Length,LastWriteTime)
+[pscustomobject]@{Time=(Get-Date -Format o);AuditPid=$PID;Processes=$relevant;AppleUsbDevices=$devices;UsbmuxListeners=$listeners;RestoreTempFiles=$tempFiles} | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath (Join-Path $PSScriptRoot 'audit-restore-preflight.json') -Encoding UTF8

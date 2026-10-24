@@ -1,0 +1,208 @@
+name: release-app
+
+# Builds and releases the desktop app for macOS, Linux, and Windows. Runs on the
+# same version tags as the CLI release; the .dmg/.app (macOS), .deb/.AppImage
+# (Linux), and NSIS installer (Windows) are attached to the GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-app:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            toolchain: stable
+          # ubuntu-24.04 to match the snap's core24 base: the snap is packed
+          # in destructive mode further down, so stage-packages resolve
+          # against this runner's archive. Bumping the base means bumping
+          # these together. Side effect: the .deb and AppImage now link
+          # noble's glibc/webkit, so they need Ubuntu 24.04 or newer.
+          - os: ubuntu-24.04
+            toolchain: stable
+          - os: ubuntu-24.04-arm
+            toolchain: stable
+          # Windows uses the GNU host toolchain — the vendored C stack is built
+          # with autotools (no MSVC), and it's what the helper + app link against.
+          - os: windows-latest
+            toolchain: stable-x86_64-pc-windows-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install macOS build deps
+        if: runner.os == 'macOS'
+        run: brew install autoconf automake libtool pkg-config cmake autoconf-archive
+
+      - name: Install Linux build deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev \
+            libayatana-appindicator3-dev patchelf \
+            build-essential autoconf automake libtool pkg-config cmake autoconf-archive \
+            libusb-1.0-0-dev libssl-dev libcurl4-openssl-dev zlib1g-dev
+
+      - name: Install Windows build deps (MSYS2)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        id: msys2
+        with:
+          msystem: MINGW64
+          # `update: true` runs a full `pacman -Syuu`, and on Windows pacman
+          # can fail to replace a binary it can't unlink while writing the
+          # rest of the package. That split perl in v0.5.9: /usr/bin/perl
+          # stayed 5.42.2 while /usr/lib/perl5/core_perl went to 5.42.3, and
+          # openssl-src (we build OpenSSL from source — restorekit-sys pins
+          # openssl-sys with `vendored`) died in `make depend` with
+          # "Perl lib version doesn't match executable 'perl' version".
+          # The action's bundled base is self-consistent and refreshed
+          # regularly, so skip the upgrade — same as ci.yml.
+          update: false
+          install: >-
+            base-devel git make autoconf automake libtool autoconf-archive
+            gettext-devel pkgconf perl mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkgconf mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-libusb mingw-w64-x86_64-nasm
+
+      - name: Put the MSYS2 toolchain on PATH
+        # tauri-action runs cargo in the default shell, so the C stack's autotools
+        # (sh, gcc, autoreconf, make) must be reachable on the Windows PATH.
+        # GITHUB_PATH lines are prepended with the LAST-written line taking
+        # precedence, so write usr\bin first: mingw64\bin must end up ahead of it
+        # so `pkg-config` is the MinGW-prefix pkgconf — the one that searches
+        # /mingw64/lib/pkgconfig (libusb-1.0) and reports native library paths.
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          "${{ steps.msys2.outputs.msys2-location }}\usr\bin" | Out-File $env:GITHUB_PATH -Append
+          "${{ steps.msys2.outputs.msys2-location }}\mingw64\bin" | Out-File $env:GITHUB_PATH -Append
+
+      # No cache: this workflow only runs on tag refs, which can restore
+      # caches from main only — and those are keyed for ci's debug builds, so
+      # a release build here never hits.
+      - name: Install Rust toolchain
+        shell: bash
+        run: |
+          rustup toolchain install ${{ matrix.toolchain }} --profile minimal --no-self-update
+          rustup default ${{ matrix.toolchain }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build & stage the privileged DFU helper
+        working-directory: apps/desktop
+        run: bash ./stage-helper.sh
+
+      - name: Write the App Store Connect API key
+        if: runner.os == 'macOS'
+        # The secret comes in via env (not inlined in the command) and is stored
+        # base64-encoded — single-line base64 is masked reliably; a multi-line
+        # PEM is not. The file lands in RUNNER_TEMP, which is wiped after the job.
+        env:
+          APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s' "$APPLE_API_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey.p8"
+
+      - name: Build & release the app
+        uses: tauri-apps/tauri-action@v0
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "RestoreKit ${{ github.ref_name }}"
+          releaseDraft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Updater artifact signing (all platforms).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # macOS Developer ID signing + notarization (ignored on Linux).
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PATH: ${{ runner.temp }}/asc/AuthKey.p8
+
+      # tauri-action notarizes and staples the .app, but not the .dmg itself.
+      # Notarize + staple the .dmg so a directly-downloaded copy verifies offline,
+      # then re-upload it (the cask below hashes this stapled file).
+      - name: Notarize & staple the .dmg
+        if: runner.os == 'macOS'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          dmg="apps/desktop/src-tauri/target/release/bundle/dmg/RestoreKit_${version}_aarch64.dmg"
+          xcrun notarytool submit "$dmg" \
+            --key "$RUNNER_TEMP/asc/AuthKey.p8" \
+            --key-id "${{ secrets.APPLE_API_KEY }}" \
+            --issuer "${{ secrets.APPLE_API_ISSUER }}" \
+            --wait
+          xcrun stapler staple "$dmg"
+          gh release upload "$GITHUB_REF_NAME" "$dmg" --clobber
+
+      # Pack the .deb into a snap and publish it to the Snap Store under the
+      # plain `restorekit` name (the CLI ships separately as `restorekit-cli`).
+      # Destructive mode builds on the host directly, which works because the
+      # runner (ubuntu-24.04) matches the snap's core24 base. Pack runs under
+      # sudo: snapcraft shells out to `snap install` for the gnome extension's
+      # build snaps, and snapd only allows that as root. It also swallows snap's
+      # stderr, so dump its log on failure to see the real error.
+      - name: Build & publish the snap
+        if: runner.os == 'Linux'
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          arch="$(dpkg --print-architecture)"
+          sudo snap install snapcraft --classic
+          mkdir -p snapbuild
+          cp "apps/desktop/src-tauri/target/release/bundle/deb/RestoreKit_${version}_${arch}.deb" \
+            snapbuild/restorekit.deb
+          sed "s/VERSION_PLACEHOLDER/${version}/" apps/desktop/snap/snapcraft.yaml \
+            > snapbuild/snapcraft.yaml
+          cd snapbuild
+          sudo snapcraft pack --destructive-mode || {
+            sudo cat /root/.local/state/snapcraft/log/*.log
+            exit 1
+          }
+          snapcraft upload --release=stable "restorekit_${version}_${arch}.snap"
+
+      # Fill the cask template with this release's version + .dmg sha256 and push
+      # it to the tap, so `brew install --cask restorekit` tracks the release.
+      - name: Publish the Homebrew cask
+        if: runner.os == 'macOS'
+        env:
+          TAP_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          dmg="apps/desktop/src-tauri/target/release/bundle/dmg/RestoreKit_${version}_aarch64.dmg"
+          sha="$(shasum -a 256 "$dmg" | awk '{print $1}')"
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/fcjr/homebrew-fcjr.git" tap
+          mkdir -p tap/Casks
+          sed -e "s/VERSION_PLACEHOLDER/${version}/" -e "s/SHA256_PLACEHOLDER/${sha}/" \
+            apps/desktop/homebrew/restorekit.rb > tap/Casks/restorekit.rb
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/restorekit.rb
+          git diff --cached --quiet || git commit -m "restorekit ${version}"
+          git push

@@ -1,0 +1,38 @@
+$ErrorActionPreference='Stop'
+$log=Join-Path $PSScriptRoot 'apple-driver-read-test.log'
+try {
+ $devices=@(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like 'USB\VID_05AC&PID_1281\*' })
+ if($devices.Count -ne 1 -or $devices[0].InstanceId -notmatch 'ECID:001808291EA2401C(?:_|$)'){throw 'Expected sole authorized Recovery device'}
+ $id=$devices[0].InstanceId
+ $loc=@((Get-PnpDeviceProperty -InstanceId $id -KeyName DEVPKEY_Device_LocationPaths).Data)
+ if($loc -notcontains 'PCIROOT(0)#PCI(1400)#USBROOT(0)#USB(13)'){throw 'Unexpected USB location'}
+ $before=(Get-PnpDeviceProperty -InstanceId $id -KeyName DEVPKEY_Device_DriverInfPath).Data
+ "Before=$before Instance=$id" | Set-Content -LiteralPath $log
+ @{InstanceId=$id;BeforeInf=$before;TemporaryTestInf='oem147.inf';LocationPaths=$loc;Time=(Get-Date -Format o)} | ConvertTo-Json | Set-Content (Join-Path $PSScriptRoot 'apple-driver-before.json')
+ if((Get-Content 'C:\Windows\INF\oem147.inf' -Raw) -notmatch 'USB\\VID_05ac&PID_1281'){throw 'Apple INF lacks expected Recovery hardware'}
+ Add-Type @"
+using System; using System.Runtime.InteropServices;
+public static class MacAppleDriverTest {
+ [DllImport("newdev.dll",CharSet=CharSet.Unicode,SetLastError=true)]
+ [return:MarshalAs(UnmanagedType.Bool)]
+ public static extern bool UpdateDriverForPlugAndPlayDevices(IntPtr hwnd,string HardwareId,string FullInfPath,uint flags,[MarshalAs(UnmanagedType.Bool)]out bool reboot);
+}
+"@
+ $reboot=$false
+ $ok=[MacAppleDriverTest]::UpdateDriverForPlugAndPlayDevices([IntPtr]::Zero,'USB\VID_05AC&PID_1281','C:\Windows\INF\oem147.inf',5,[ref]$reboot)
+ $err=[Runtime.InteropServices.Marshal]::GetLastWin32Error()
+ "DriverChangeSuccess=$ok Win32=$err Reboot=$reboot" | Add-Content -LiteralPath $log
+ if(-not $ok){throw "Driver rebind failed: $err"}
+ Start-Sleep -Milliseconds 700
+ $after=Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match 'VID_05AC&PID_1281' }
+ foreach($d in $after){$inf=(Get-PnpDeviceProperty -InstanceId $d.InstanceId -KeyName DEVPKEY_Device_DriverInfPath).Data;"AfterInf=$inf Instance=$($d.InstanceId)"|Add-Content -LiteralPath $log}
+ $out=Join-Path $PSScriptRoot 'native-read-test\native-read-stdout.log'
+ $errLog=Join-Path $PSScriptRoot 'native-read-test\native-read-stderr.log'
+ $test=Start-Process -FilePath (Join-Path $PSScriptRoot 'native-read-test\native-apple-read.exe') -ArgumentList '--read-only' -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $errLog -PassThru
+ [void]$test.Handle
+ $test.WaitForExit(); $test.Refresh()
+ $result=$test.ExitCode
+ Get-Content -LiteralPath $out,$errLog | Add-Content -LiteralPath $log
+ "ReadTestExit=$result" | Add-Content -LiteralPath $log
+ exit $result
+} catch { $_ | Out-String | Add-Content -LiteralPath $log; exit 1 }

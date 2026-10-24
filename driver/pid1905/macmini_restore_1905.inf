@@ -1,0 +1,33 @@
+; Mac mini M4 restore mode only. No driver binary is supplied.
+[Version]
+Signature="$Windows NT$"
+Class=USBDevice
+ClassGuid={88BAE032-5A81-49F0-BC3D-A4FF138216D6}
+Provider=%ProviderName%
+CatalogFile=macmini_restore_1905.cat
+DriverVer=10/24/2026,1.0.0.0
+PnpLockdown=1
+
+[Manufacturer]
+%ProviderName%=Models,NTamd64
+
+[Models.NTamd64]
+%DeviceName%=Mac1905_WinUSB,USB\VID_05AC&PID_1905
+
+[Mac1905_WinUSB.NT]
+Include=winusb.inf
+Needs=WINUSB.NT
+
+[Mac1905_WinUSB.NT.Services]
+Include=winusb.inf
+Needs=WINUSB.NT.Services
+
+[Mac1905_WinUSB.NT.HW]
+AddReg=Mac1905_Interface
+
+[Mac1905_Interface]
+HKR,,DeviceInterfaceGUIDs,0x00010000,"{7A8E6228-8704-40CD-A54C-7869B23D1905}"
+
+[Strings]
+ProviderName="Mac mini Restore 1905"
+DeviceName="Mac mini Restore Mode (1905 WinUSB)"

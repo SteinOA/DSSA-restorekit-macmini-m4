@@ -1,0 +1,32 @@
+$ErrorActionPreference = 'Stop'
+Set-Location -LiteralPath $PSScriptRoot
+$exe = Join-Path $PSScriptRoot 'restorekit.exe'
+Write-Host 'Mac mini restore fra Windows - RestoreKit 0.5.13'
+Write-Host 'Koble bare Mac-en som skal gjenopprettes til PC-en. Koble fra iPhone/iPad.'
+& $exe list
+$apple = @(Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -match 'VID_05AC' })
+if ($apple.Count -eq 0) {
+    Write-Host 'Windows ser ingen Apple-enhet. Koble datakabel direkte til midterste USB-C-port bak paa M4 mini.'
+    Write-Host 'Trekk ut strommen, hold stromknappen, sett inn strommen, hold opptil 10 sekunder og slipp.'
+    Write-Host 'Kjor START igjen etterpaa. Ingen driver eller restore er startet.'
+    exit 2
+}
+$apple | Format-Table Status,FriendlyName,InstanceId -AutoSize
+Write-Host 'Kontroller at enheten er Mac-en med den nye, tomme interne SSD-en.'
+$ready = Read-Host 'Skriv FORTSETT for driveroppsett. Windows kan be om administratorgodkjenning'
+if ($ready -cne 'FORTSETT') { exit 0 }
+& $exe setup-driver
+if ($LASTEXITCODE -ne 0) { throw 'Driveroppsett feilet. Restore er ikke startet.' }
+$raw = & $exe --json list
+if ($LASTEXITCODE -ne 0) { throw 'Enhetskontroll feilet.' }
+$state = $raw | ConvertFrom-Json
+$devices = @($state.devices)
+if ($devices.Count -ne 1) { throw 'Forventer akkurat en Apple-enhet. Koble fra andre enheter og kontroller DFU.' }
+& $exe list
+Write-Host 'Neste kommando sletter Mac-en og installerer firmware/macOS. Bekreft bare hvis vist enhet er riktig.'
+Write-Host 'RestoreKit viser sin egen bekreftelse. Ikke koble fra kabel eller strom under restore.'
+$log = Join-Path $PSScriptRoot ('restore-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
+& $exe --verbose restore 2>&1 | Tee-Object -FilePath $log
+$restoreExit = $LASTEXITCODE
+Write-Host "Restore avsluttet med kode $restoreExit. Logg: $log"
+exit $restoreExit

@@ -1,0 +1,439 @@
+diff --git a/src/libirecovery.c b/src/libirecovery.c
+index 71563e1..7f955d8 100644
+--- a/src/libirecovery.c
++++ b/src/libirecovery.c
+@@ -36,12 +36,14 @@
+ #include <libimobiledevice-glue/thread.h>
+ 
+ #ifndef USE_DUMMY
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ #include <libusb.h>
+ #if (defined(LIBUSB_API_VERSION) && (LIBUSB_API_VERSION >= 0x01000102)) || (defined(LIBUSBX_API_VERSION) && (LIBUSBX_API_VERSION >= 0x01000102))
++#ifndef _WIN32
+ #define HAVE_LIBUSB_HOTPLUG_API 1
+ #endif
++#endif
+ #else
+ #include <CoreFoundation/CoreFoundation.h>
+ #include <IOKit/usb/IOUSBLib.h>
+@@ -98,7 +100,7 @@
+         static void f(void)
+ #endif
+ 
+-#ifndef WIN32
++#if !defined(WIN32) || defined(IRECV_USE_LIBUSB)
+ struct irecv_async_transfer {
+  	uint32_t len;
+  #ifdef HAVE_IOKIT
+@@ -119,7 +121,7 @@ struct irecv_client_private {
+ 	int isKIS;
+ 	struct irecv_device_info device_info;
+ #ifndef USE_DUMMY
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ 	libusb_device_handle* handle;
+ #else
+@@ -162,7 +164,7 @@ struct irecv_client_private {
+ 
+ static int libirecovery_debug = 0;
+ #ifndef USE_DUMMY
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ static libusb_context* libirecovery_context = NULL;
+ #endif
+@@ -574,7 +576,7 @@ static unsigned int crc32_lookup_t1[256] = {
+ #define crc32_step(a,b) \
+ 	a = (crc32_lookup_t1[(a & 0xFF) ^ ((unsigned char)b)] ^ (a >> 8))
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ #pragma pack(1)
+ typedef struct {
+ 	uint16_t vid;
+@@ -690,7 +692,7 @@ struct collection listeners;
+ static mutex_t listener_mutex;
+ struct collection devices;
+ static mutex_t device_mutex;
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ static CFRunLoopRef iokit_runloop = NULL;
+ #else
+@@ -701,7 +703,7 @@ static libusb_context* irecv_hotplug_ctx = NULL;
+ static void _irecv_deinit(void)
+ {
+ #ifndef USE_DUMMY
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ 	if (libirecovery_context != NULL) {
+ 		libusb_exit(libirecovery_context);
+@@ -722,7 +724,7 @@ INITIALIZER(_irecv_init)
+ 		irecv_set_debug_level(libirecovery_debug);
+ 	}
+ #ifndef USE_DUMMY
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ 	libusb_init(&libirecovery_context);
+ #endif
+@@ -784,7 +786,7 @@ static int iokit_get_string_descriptor_ascii(irecv_client_t client, uint8_t desc
+ 
+ static int irecv_get_string_descriptor_ascii(irecv_client_t client, uint8_t desc_index, unsigned char * buffer, int size)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	return iokit_get_string_descriptor_ascii(client, desc_index, buffer, size);
+ #else
+@@ -1007,7 +1009,7 @@ static void irecv_copy_nonce_with_tag(irecv_client_t client, const char* tag, un
+ 	irecv_copy_nonce_with_tag_from_buffer(tag,nonce,nonce_size,buf);
+ }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ static irecv_error_t irecv_kis_request_init(KIS_req_header *hdr, uint8_t portal, uint16_t index, size_t argCount, size_t payloadSize, size_t rplWords)
+ {
+ 	if (argCount > UINT8_MAX) {
+@@ -1140,7 +1142,7 @@ static int irecv_kis_read_string(KIS_device_info *di, size_t off, char *buf, siz
+ 
+ static irecv_error_t irecv_kis_init(irecv_client_t client)
+ {
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ 	irecv_error_t err = irecv_kis_config_write32(client, KIS_PORTAL_CONFIG, KIS_INDEX_ENABLE_A, KIS_ENABLE_A_VAL);
+ 	if (err != IRECV_E_SUCCESS) {
+ 		debug("Failed to write to KIS_INDEX_ENABLE_A, error %d\n", err);
+@@ -1161,7 +1163,7 @@ static irecv_error_t irecv_kis_init(irecv_client_t client)
+ static irecv_error_t irecv_kis_load_device_info(irecv_client_t client)
+ {
+ 	debug("Loading device info in KIS mode...\n");
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 	KIS_device_info kisInfo;
+ 	DWORD transferred = 0;
+ 	int ret = DeviceIoControl(client->handle, 0x220004, NULL, 0, &kisInfo, sizeof(kisInfo), (PDWORD)&transferred, NULL);
+@@ -1229,7 +1231,7 @@ static irecv_error_t irecv_kis_load_device_info(irecv_client_t client)
+ 	return IRECV_E_SUCCESS;
+ }
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ static const GUID GUID_DEVINTERFACE_IBOOT = {0xED82A167L, 0xD61A, 0x4AF6, {0x9A, 0xB6, 0x11, 0xE5, 0x22, 0x36, 0xC5, 0x76}};
+ static const GUID GUID_DEVINTERFACE_DFU = {0xB8085869L, 0xFEB9, 0x404B, {0x8C, 0xB1, 0x1E, 0x5C, 0x14, 0xFA, 0x8C, 0x54}};
+ static const GUID GUID_DEVINTERFACE_KIS = {0xB36F4137L, 0xF4EF, 0x4BFC, {0xA2, 0x5A, 0xC2, 0x41, 0x07, 0x68, 0xEE, 0x37}};
+@@ -1443,7 +1445,7 @@ int irecv_usb_control_transfer(irecv_client_t client, uint8_t bm_request_type, u
+ #ifdef USE_DUMMY
+ 	return IRECV_E_UNSUPPORTED;
+ #else
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	return iokit_usb_control_transfer(client, bm_request_type, b_request, w_value, w_index, data, w_length, timeout);
+ #else
+@@ -1493,7 +1495,7 @@ int irecv_usb_control_transfer(irecv_client_t client, uint8_t bm_request_type, u
+ #endif
+ }
+ 
+-#ifndef WIN32
++#if !defined(WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 
+ static void iokit_async_cb(void *refcon, kern_return_t ret, void *arg_0)
+@@ -1534,7 +1536,7 @@ static int iokit_async_usb_control_transfer(irecv_client_t client, uint8_t bm_re
+ 
+ #else
+ 
+-static void async_cb(struct libusb_transfer* usb_transfer) {
++static void LIBUSB_CALL async_cb(struct libusb_transfer* usb_transfer) {
+ 	struct irecv_async_transfer* transfer = usb_transfer->user_data;
+ 	transfer->ret = usb_transfer->status;
+ 	transfer->len += usb_transfer->actual_length;
+@@ -1547,7 +1549,7 @@ IRECV_API int irecv_async_usb_control_transfer(irecv_client_t client, uint8_t bm
+ #ifdef USE_DUMMY
+ 	return IRECV_E_UNSUPPORTED;
+ #else
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	return iokit_async_usb_control_transfer(client, bm_request_type, b_request, w_value, w_index, data, w_length, NULL);
+ #else
+@@ -1585,10 +1587,10 @@ IRECV_API int irecv_async_usb_control_transfer_with_cancel(irecv_client_t client
+ #ifdef USE_DUMMY
+ 	return IRECV_E_UNSUPPORTED;
+ #else
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ 	irecv_error_t error;
+ 	struct irecv_async_transfer transfer;
+-	bzero(&transfer, sizeof(struct irecv_async_transfer));
++	memset(&transfer, 0, sizeof(struct irecv_async_transfer));
+ 
+ #ifdef HAVE_IOKIT
+ 
+@@ -1798,7 +1800,7 @@ int irecv_usb_bulk_transfer(irecv_client_t client,
+ #else
+ 	int ret;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	return iokit_usb_bulk_transfer(client, endpoint, data, length, transferred, timeout);
+ #else
+@@ -1832,7 +1834,7 @@ IRECV_API int irecv_usb_interrupt_transfer(irecv_client_t client,
+ #else
+ 	int ret;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	return iokit_usb_interrupt_transfer(client, endpoint, data, length, transferred, timeout);
+ #else
+@@ -2018,7 +2020,7 @@ static irecv_error_t iokit_open_with_ecid(irecv_client_t* pclient, uint64_t ecid
+ }
+ #endif
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ static irecv_error_t libusb_usb_open_handle_with_descriptor_and_ecid(irecv_client_t *pclient, struct libusb_device_handle *usb_handle, struct libusb_device_descriptor *usb_descriptor, uint64_t ecid)
+ {
+@@ -2129,7 +2131,7 @@ irecv_error_t irecv_open_with_ecid(irecv_client_t* pclient, uint64_t ecid)
+ 	if (libirecovery_debug) {
+ 		irecv_set_debug_level(libirecovery_debug);
+ 	}
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	error = iokit_open_with_ecid(pclient, ecid);
+ #else
+@@ -2221,7 +2223,7 @@ irecv_error_t irecv_usb_set_configuration(irecv_client_t client, int configurati
+ 	if (check_context(client) != IRECV_E_SUCCESS)
+ 		return IRECV_E_NO_DEVICE;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ 	debug("Setting to configuration %d\n", configuration);
+ 
+ #ifdef HAVE_IOKIT
+@@ -2340,7 +2342,7 @@ irecv_error_t irecv_usb_set_interface(irecv_client_t client, int usb_interface,
+ 		return IRECV_E_NO_DEVICE;
+ 
+ 	debug("Setting to interface %d:%d\n", usb_interface, usb_alt_interface);
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	if (iokit_usb_set_interface(client, usb_interface, usb_alt_interface) < 0) {
+ 		return IRECV_E_USB_INTERFACE;
+@@ -2378,7 +2380,7 @@ irecv_error_t irecv_reset(irecv_client_t client)
+ 	if (check_context(client) != IRECV_E_SUCCESS)
+ 		return IRECV_E_NO_DEVICE;
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 	IOReturn result;
+ 
+@@ -2513,11 +2515,12 @@ struct irecv_device_event_context {
+ struct irecv_usb_device_info {
+ 	struct irecv_device_info device_info;
+ 	enum irecv_mode mode;
++	uint16_t physical_product_id;
+ 	uint32_t location;
+ 	int alive;
+ };
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ struct irecv_win_dev_ctx {
+ 	PSP_DEVICE_INTERFACE_DETAIL_DATA_A details;
+ 	uint32_t location;
+@@ -2535,7 +2538,7 @@ static int _irecv_is_recovery_device(void *device)
+ {
+ 	uint16_t vendor_id = 0;
+ 	uint16_t product_id = 0;
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 	const char *path = (const char*)device;
+ 	unsigned int vendor = 0;
+ 	unsigned int product = 0;
+@@ -2599,11 +2602,12 @@ static void* _irecv_handle_device_add(void *userdata)
+ 	char serial_str[256];
+ 	uint32_t location = 0;
+ 	uint16_t product_id = 0;
++	uint16_t physical_product_id = 0;
+ 	irecv_error_t error = 0;
+ 	irecv_client_t client = NULL;
+ 
+ 	memset(serial_str, 0, sizeof(serial_str));
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 	struct irecv_win_dev_ctx *win_ctx = (struct irecv_win_dev_ctx*)userdata;
+ 	PSP_DEVICE_INTERFACE_DETAIL_DATA_A details = win_ctx->details;
+ 	LPSTR result = (LPSTR)details->DevicePath;
+@@ -2728,6 +2732,7 @@ static void* _irecv_handle_device_add(void *userdata)
+ 		return NULL;
+ 	}
+ 	product_id = devdesc.idProduct;
++	physical_product_id = devdesc.idProduct;
+ 
+ 	uint8_t bus = libusb_get_bus_number(device);
+ 	uint8_t address = libusb_get_device_address(device);
+@@ -2819,6 +2824,8 @@ static void* _irecv_handle_device_add(void *userdata)
+ 	usb_dev_info->location = location;
+ 	usb_dev_info->alive = 1;
+ 	usb_dev_info->mode = client_loc.mode;
++	/* KIS can remap the logical mode; retain its actual USB PID for polling. */
++	usb_dev_info->physical_product_id = physical_product_id ? physical_product_id : product_id;
+ 
+ 	collection_add(&devices, usb_dev_info);
+ 
+@@ -2860,7 +2867,7 @@ static void _irecv_handle_device_remove(struct irecv_usb_device_info *devinfo)
+ 	free(devinfo);
+ }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ static void iokit_device_added(void *refcon, io_iterator_t iterator)
+ {
+@@ -2929,7 +2936,7 @@ static void iokit_device_removed(void *refcon, io_iterator_t iterator)
+ }
+ #else /* !HAVE_IOKIT */
+ #ifdef HAVE_LIBUSB_HOTPLUG_API
+-static int _irecv_usb_hotplug_cb(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
++static int LIBUSB_CALL _irecv_usb_hotplug_cb(libusb_context *ctx, libusb_device *device, libusb_hotplug_event event, void *user_data)
+ {
+ 	if (!_irecv_is_recovery_device(device)) {
+ 		return 0;
+@@ -2967,7 +2974,7 @@ struct _irecv_event_handler_info {
+ static void *_irecv_event_handler(void* data)
+ {
+ 	struct _irecv_event_handler_info* info = (struct _irecv_event_handler_info*)data;
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 	struct collection newDevices;
+ 	const GUID *guids[] = { &GUID_DEVINTERFACE_KIS, &GUID_DEVINTERFACE_PORTDFU, &GUID_DEVINTERFACE_DFU, &GUID_DEVINTERFACE_IBOOT, NULL };
+ 	int running = 1;
+@@ -3204,17 +3211,16 @@ static void *_irecv_event_handler(void* data)
+ 			uint8_t bus = libusb_get_bus_number(dev);
+ 			uint8_t address = libusb_get_device_address(dev);
+ 			uint32_t location = (bus << 16) | address;
+-			int found = 0;
++			struct libusb_device_descriptor descriptor;
++			if (libusb_get_device_descriptor(dev, &descriptor) != 0) {
++				continue;
++			}
+ 			FOREACH(struct irecv_usb_device_info *devinfo, &devices) {
+-				if (devinfo->location == location) {
++				if (devinfo->location == location && devinfo->physical_product_id == descriptor.idProduct) {
+ 					devinfo->alive = 1;
+-					found = 1;
+ 					break;
+ 				}
+ 			} ENDFOREACH
+-			if (!found) {
+-				_irecv_handle_device_add(dev);
+-			}
+ 		}
+ 
+ 		FOREACH(struct irecv_usb_device_info *devinfo, &devices) {
+@@ -3223,6 +3229,31 @@ static void *_irecv_event_handler(void* data)
+ 			}
+ 		} ENDFOREACH
+ 
++		/* Deliver removals before additions: Port DFU has a controller ECID,
++		 * and its removal must release that ECID before the SoC DFU add.
++		 * Keep devs referenced until both passes complete. */
++		for (i = 0; i < cnt; i++) {
++			libusb_device *dev = devs[i];
++			if (!_irecv_is_recovery_device(dev)) {
++				continue;
++			}
++			uint32_t location = (libusb_get_bus_number(dev) << 16) | libusb_get_device_address(dev);
++			struct libusb_device_descriptor descriptor;
++			if (libusb_get_device_descriptor(dev, &descriptor) != 0) {
++				continue;
++			}
++			int found = 0;
++			FOREACH(struct irecv_usb_device_info *devinfo, &devices) {
++				if (devinfo->location == location && devinfo->physical_product_id == descriptor.idProduct) {
++					found = 1;
++					break;
++				}
++			} ENDFOREACH
++			if (!found) {
++				_irecv_handle_device_add(dev);
++			}
++		}
++
+ 		libusb_free_device_list(devs, 1);
+ 
+ 		mutex_lock(&listener_mutex);
+@@ -3265,7 +3296,7 @@ irecv_error_t irecv_device_event_subscribe(irecv_device_event_context_t *context
+ 		struct _irecv_event_handler_info info;
+ 		cond_init(&info.startup_cond);
+ 		mutex_init(&info.startup_mutex);
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ 		libusb_init(&irecv_hotplug_ctx);
+ #endif
+@@ -3338,7 +3369,7 @@ irecv_error_t irecv_device_event_unsubscribe(irecv_device_event_context_t contex
+ 		collection_free(&devices);
+ 		mutex_unlock(&device_mutex);
+ 		mutex_destroy(&device_mutex);
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ 		libusb_exit(irecv_hotplug_ctx);
+ 		irecv_hotplug_ctx = NULL;
+@@ -3366,7 +3397,7 @@ static irecv_error_t irecv_cleanup(irecv_client_t client)
+ 			event.type = IRECV_DISCONNECTED;
+ 			client->disconnected_callback(client, &event);
+ 		}
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifdef HAVE_IOKIT
+ 		if (client->usbInterface) {
+ 			(*client->usbInterface)->USBInterfaceClose(client->usbInterface);
+@@ -3421,7 +3452,7 @@ void irecv_set_debug_level(int level)
+ {
+ 	libirecovery_debug = level;
+ #ifndef USE_DUMMY
+-#ifndef _WIN32
++#if !defined(_WIN32) || defined(IRECV_USE_LIBUSB)
+ #ifndef HAVE_IOKIT
+ 	if (libirecovery_context) {
+ #if LIBUSB_API_VERSION >= 0x01000106
+@@ -3614,7 +3645,7 @@ static irecv_error_t irecv_kis_send_buffer(irecv_client_t client, unsigned char*
+ 		if (toUpload > 0x4000)
+ 			toUpload = 0x4000;
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 		memcpy(chunk->data, buffer, toUpload);
+ 		chunk->size    = toUpload;
+ 		chunk->address = address;
+@@ -3631,7 +3662,7 @@ static irecv_error_t irecv_kis_send_buffer(irecv_client_t client, unsigned char*
+ 		memcpy(chunk->data, buffer, toUpload);
+ #endif
+ 
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 		DWORD transferred = 0;
+ 		int ret = DeviceIoControl(client->handle, 0x220008, chunk, sizeof(*chunk), NULL, 0, (PDWORD)&transferred, NULL);
+ 		irecv_error_t error = (ret) ? IRECV_E_SUCCESS : IRECV_E_USB_UPLOAD;
+@@ -3664,7 +3695,7 @@ static irecv_error_t irecv_kis_send_buffer(irecv_client_t client, unsigned char*
+ 	free(chunk);
+ 
+ 	if (options & IRECV_SEND_OPT_DFU_NOTIFY_FINISH) {
+-#ifdef _WIN32
++#if defined(_WIN32) && !defined(IRECV_USE_LIBUSB)
+ 		DWORD amount = (DWORD)origLen;
+ 		DWORD transferred = 0;
+ 		int ret = DeviceIoControl(client->handle, 0x22000C, &amount, 4, NULL, 0, (PDWORD)&transferred, NULL);

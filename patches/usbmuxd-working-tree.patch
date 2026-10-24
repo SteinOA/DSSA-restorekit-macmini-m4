@@ -1,0 +1,365 @@
+diff --git a/src/usb.c b/src/usb.c
+index d0e9afc..2f6bd9f 100644
+--- a/src/usb.c
++++ b/src/usb.c
+@@ -86,6 +86,9 @@ static void usb_disconnect(struct usb_device *dev)
+ 	if(!dev->handle) {
+ 		return;
+ 	}
++#ifdef _WIN32
++	dev->alive = 0;
++#endif
+ 
+ 	// kill the rx xfer and tx xfers and try to make sure the callbacks
+ 	// get called before we free the device
+@@ -108,7 +111,13 @@ static void usb_disconnect(struct usb_device *dev)
+ 		tv.tv_usec = 1000;
+ 		if((res = libusb_handle_events_timeout(NULL, &tv)) < 0) {
+ 			usbmuxd_log(LL_ERROR, "libusb_handle_events_timeout for usb_disconnect failed: %s", libusb_error_name(res));
++#ifdef _WIN32
++			/* Pending serial verification still owns this handle/context.
++			 * Keep the dead device for the next reap rather than close beneath it. */
++			return;
++#else
+ 			break;
++#endif
+ 		}
+ 	}
+ 
+@@ -268,6 +277,41 @@ static int start_rx_loop(struct usb_device *dev)
+ 	return 0;
+ }
+ 
++static void finish_serial_initialization(struct usb_device *usbdev)
++{
++	/* Finish setup now */
++	if(device_add(usbdev) < 0) {
++		usb_disconnect(usbdev);
++		return;
++	}
++
++	// Spin up NUM_RX_LOOPS parallel usb data retrieval loops
++	// Old usbmuxds used only 1 rx loop, but that leaves the
++	// USB port sleeping most of the time
++	int rx_loops = NUM_RX_LOOPS;
++	for (rx_loops = NUM_RX_LOOPS; rx_loops > 0; rx_loops--) {
++		if(start_rx_loop(usbdev) < 0) {
++			usbmuxd_log(LL_WARNING, "Failed to start RX loop number %d", NUM_RX_LOOPS - rx_loops);
++			break;
++		}
++	}
++
++	// Ensure we have at least 1 RX loop going
++	if (rx_loops == NUM_RX_LOOPS) {
++		usbmuxd_log(LL_FATAL, "Failed to start any RX loop for device %d-%d",
++					usbdev->bus, usbdev->address);
++		device_remove(usbdev);
++		usb_disconnect(usbdev);
++		return;
++	} else if (rx_loops > 0) {
++		usbmuxd_log(LL_WARNING, "Failed to start all %d RX loops. Going on with %d loops. "
++					"This may have negative impact on device read speed.",
++					NUM_RX_LOOPS, NUM_RX_LOOPS - rx_loops);
++	} else {
++		usbmuxd_log(LL_DEBUG, "All %d RX loops started successfully", NUM_RX_LOOPS);
++	}
++}
++
+ static void get_serial_callback(struct libusb_transfer *transfer)
+ {
+ 	unsigned int di, si;
+@@ -302,37 +346,7 @@ static void get_serial_callback(struct libusb_transfer *transfer)
+ 		usbdev->serial[di+1] = '\0';
+ 	}
+ 
+-	/* Finish setup now */
+-	if(device_add(usbdev) < 0) {
+-		usb_disconnect(usbdev);
+-		return;
+-	}
+-
+-	// Spin up NUM_RX_LOOPS parallel usb data retrieval loops
+-	// Old usbmuxds used only 1 rx loop, but that leaves the
+-	// USB port sleeping most of the time
+-	int rx_loops = NUM_RX_LOOPS;
+-	for (rx_loops = NUM_RX_LOOPS; rx_loops > 0; rx_loops--) {
+-		if(start_rx_loop(usbdev) < 0) {
+-			usbmuxd_log(LL_WARNING, "Failed to start RX loop number %d", NUM_RX_LOOPS - rx_loops);
+-			break;
+-		}
+-	}
+-
+-	// Ensure we have at least 1 RX loop going
+-	if (rx_loops == NUM_RX_LOOPS) {
+-		usbmuxd_log(LL_FATAL, "Failed to start any RX loop for device %d-%d",
+-					usbdev->bus, usbdev->address);
+-		device_remove(usbdev);
+-		usb_disconnect(usbdev);
+-		return;
+-	} else if (rx_loops > 0) {
+-		usbmuxd_log(LL_WARNING, "Failed to start all %d RX loops. Going on with %d loops. "
+-					"This may have negative impact on device read speed.",
+-					NUM_RX_LOOPS, NUM_RX_LOOPS - rx_loops);
+-	} else {
+-		usbmuxd_log(LL_DEBUG, "All %d RX loops started successfully", NUM_RX_LOOPS);
+-	}
++	finish_serial_initialization(usbdev);
+ }
+ 
+ static void get_langid_callback(struct libusb_transfer *transfer)
+@@ -377,6 +391,10 @@ static int submit_vendor_specific(struct libusb_device_handle *handle, struct mo
+ 	libusb_fill_control_transfer(ctrl_transfer, handle, buffer, callback, context, context->timeout);
+ 	
+ 	ret = libusb_submit_transfer(ctrl_transfer);
++	if (ret != 0) {
++		free(buffer);
++		libusb_free_transfer(ctrl_transfer);
++	}
+ 	return ret;
+ }
+ 
+@@ -487,15 +505,31 @@ static int set_valid_configuration(struct libusb_device* dev, struct usb_device
+ 			continue;
+ 		}
+ 		for(k = 0 ; k < config->bNumInterfaces ; k++) {
++#ifdef _WIN32
++			if (config->interface[k].num_altsetting < 1) continue;
++#endif
+ 			intf = &config->interface[k].altsetting[0];
++#ifdef _WIN32
++			if(intf->bInterfaceClass == INTERFACE_CLASS &&
++			   intf->bInterfaceSubClass == INTERFACE_SUBCLASS &&
++			   intf->bInterfaceProtocol == INTERFACE_PROTOCOL) {
++#else
+ 			if(intf->bInterfaceClass == INTERFACE_CLASS || 
+ 			   intf->bInterfaceSubClass == INTERFACE_SUBCLASS || 
+ 			   intf->bInterfaceProtocol == INTERFACE_PROTOCOL) {
++#endif
+ 				usbmuxd_log(LL_NOTICE, "Found usbmux interface for device %i-%i: %i", bus, address, intf->bInterfaceNumber);
+ 				if(intf->bNumEndpoints != 2) {
+ 					usbmuxd_log(LL_WARNING, "Endpoint count mismatch for interface %i of device %i-%i", intf->bInterfaceNumber, bus, address);
+ 					continue;
+ 				}
++#ifdef _WIN32
++				if ((intf->endpoint[0].bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) != LIBUSB_TRANSFER_TYPE_BULK ||
++				    (intf->endpoint[1].bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) != LIBUSB_TRANSFER_TYPE_BULK) {
++					usbmuxd_log(LL_WARNING, "Rejecting non-bulk PID1905 restore endpoints");
++					continue;
++				}
++#endif
+ 				if((intf->endpoint[0].bEndpointAddress & 0x80) == LIBUSB_ENDPOINT_OUT &&
+ 				   (intf->endpoint[1].bEndpointAddress & 0x80) == LIBUSB_ENDPOINT_IN) {
+ 					usbdev->interface = intf->bInterfaceNumber;
+@@ -503,6 +537,11 @@ static int set_valid_configuration(struct libusb_device* dev, struct usb_device
+ 					usbdev->ep_in = intf->endpoint[1].bEndpointAddress;
+ 					usbmuxd_log(LL_INFO, "Found interface %i with endpoints %02x/%02x for device %i-%i", usbdev->interface, usbdev->ep_out, usbdev->ep_in, bus, address);
+ 					found = 1;
++#ifdef _WIN32
++					usbmuxd_log(LL_WARNING, "PID1905 selected config=%u interface=%u class=%02X/%02X/%02X bulkIN=%02X bulkOUT=%02X",
++						config->bConfigurationValue, intf->bInterfaceNumber, intf->bInterfaceClass,
++						intf->bInterfaceSubClass, intf->bInterfaceProtocol, usbdev->ep_in, usbdev->ep_out);
++#endif
+ 					break;
+ 				} else if((intf->endpoint[1].bEndpointAddress & 0x80) == LIBUSB_ENDPOINT_OUT &&
+ 						  (intf->endpoint[0].bEndpointAddress & 0x80) == LIBUSB_ENDPOINT_IN) {
+@@ -511,6 +550,11 @@ static int set_valid_configuration(struct libusb_device* dev, struct usb_device
+ 					usbdev->ep_in = intf->endpoint[0].bEndpointAddress;
+ 					usbmuxd_log(LL_INFO, "Found interface %i with swapped endpoints %02x/%02x for device %i-%i", usbdev->interface, usbdev->ep_out, usbdev->ep_in, bus, address);
+ 					found = 1;
++#ifdef _WIN32
++					usbmuxd_log(LL_WARNING, "PID1905 selected config=%u interface=%u class=%02X/%02X/%02X bulkIN=%02X bulkOUT=%02X",
++						config->bConfigurationValue, intf->bInterfaceNumber, intf->bInterfaceClass,
++						intf->bInterfaceSubClass, intf->bInterfaceProtocol, usbdev->ep_in, usbdev->ep_out);
++#endif
+ 					break;
+ 				} else {
+ 					usbmuxd_log(LL_WARNING, "Endpoint type mismatch for interface %i of device %i-%i", intf->bInterfaceNumber, bus, address);
+@@ -572,7 +616,9 @@ static void device_complete_initialization(struct mode_context *context, struct
+ 	int bus = context->bus;
+ 	int address = context->address;
+ 	int res;
++#ifndef _WIN32
+ 	struct libusb_transfer *transfer;
++#endif
+ 
+ 	if((res = set_valid_configuration(dev, usbdev, handle)) != 0) {
+ 		usbdev->alive = 0;
+@@ -585,6 +631,7 @@ static void device_complete_initialization(struct mode_context *context, struct
+ 		return;
+ 	}
+ 
++#ifndef _WIN32
+ 	transfer = libusb_alloc_transfer(0);
+ 	if(!transfer) {
+ 		usbmuxd_log(LL_WARNING, "Failed to allocate transfer for device %d-%d: %s", bus, address, libusb_error_name(res));
+@@ -601,6 +648,7 @@ static void device_complete_initialization(struct mode_context *context, struct
+ 	memset(transfer_buffer, '\0', 1024 + LIBUSB_CONTROL_SETUP_SIZE + 8);
+ 
+ 	usbdev->serial[0] = 0;
++#endif
+ 	usbdev->bus = bus;
+ 	usbdev->address = address;
+ 	usbdev->devdesc = devdesc;
+@@ -637,6 +685,11 @@ static void device_complete_initialization(struct mode_context *context, struct
+ 
+ 	usbmuxd_log(LL_INFO, "USB Speed is %g MBit/s for device %d-%d", (double)(usbdev->speed / 1000000.0), usbdev->bus, usbdev->address);
+ 
++#ifdef _WIN32
++	/* The identity gate has already read and validated this exact serial.
++	 * Reuse it; do not submit a redundant untracked descriptor sequence. */
++	finish_serial_initialization(usbdev);
++#else
+ 	/**
+ 	 * From libusb:
+ 	 * 	Asking for the zero'th index is special - it returns a string
+@@ -653,6 +706,7 @@ static void device_complete_initialization(struct mode_context *context, struct
+ 		usbdev->alive = 0;
+ 		return;	
+ 	}
++#endif
+ }
+ 
+ static void switch_mode_cb(struct libusb_transfer* transfer) 
+@@ -734,6 +788,107 @@ static void get_mode_cb(struct libusb_transfer* transfer)
+ 		free(transfer->buffer);
+ }
+ 
++#ifdef _WIN32
++#include "restore_identity.h"
++
++struct restore_serial_context {
++	struct mode_context *mode;
++	uint8_t index;
++	uint16_t language;
++	int serial_phase;
++};
++
++static void restore_serial_log(struct libusb_transfer *transfer,
++	struct restore_serial_context *check, const char *reason, const char *serial)
++{
++	char hex[255*2+1];
++	unsigned char *data = libusb_control_transfer_get_data(transfer);
++	int count = transfer->actual_length;
++	if (count < 0) count = 0;
++	if (count > 255) count = 255;
++	for (int i = 0; i < count; i++) snprintf(hex+i*2, 3, "%02X", data[i]);
++	hex[count*2] = '\0';
++	usbmuxd_log(LL_WARNING,
++		"PID1905 identity phase=%s reason=%s status=%d actual_length=%d langid=%04X raw=%s decoded_serial=%s",
++		check->serial_phase ? "serial" : "languages", reason,
++		transfer->status, transfer->actual_length, check->language, hex, serial);
++}
++
++/* Validate the one authorized final restore target asynchronously before any
++ * mode switch, configuration, or interface claim. Hotplug forbids blocking I/O. */
++static void LIBUSB_CALL verify_restore_serial_cb(struct libusb_transfer *transfer)
++{
++	struct restore_serial_context *check = transfer->user_data;
++	struct mode_context *mode = check->mode;
++	struct usb_device *usbdev = find_device(mode->bus, mode->address);
++	const unsigned char *data = libusb_control_transfer_get_data(transfer);
++	char serial[128] = "";
++	const char *error = NULL;
++	if (!usbdev || !usbdev->alive || usbdev->handle != transfer->dev_handle) error = "device-gone-or-dead";
++	else if (transfer->status != LIBUSB_TRANSFER_COMPLETED) error = "usb-transfer-not-completed";
++	else if (transfer->actual_length < 0 || transfer->actual_length > 255) error = "invalid-transfer-length";
++	else if (!check->serial_phase) {
++		error = rk_advertised_language(data, (size_t)transfer->actual_length, &check->language);
++		if (!error) {
++			restore_serial_log(transfer, check, "advertised-language-selected", serial);
++			check->serial_phase = 1;
++			memset(transfer->buffer, 0, LIBUSB_CONTROL_SETUP_SIZE + 255);
++			libusb_fill_control_setup(transfer->buffer, LIBUSB_ENDPOINT_IN, LIBUSB_REQUEST_GET_DESCRIPTOR,
++				(LIBUSB_DT_STRING << 8) | check->index, check->language, 255);
++			transfer->actual_length = 0;
++			int result = libusb_submit_transfer(transfer);
++			if (result == 0) return; /* Same transfer remains tracked across both IN reads. */
++			error = "serial-request-submit-failed";
++		}
++	} else {
++		error = rk_verify_restore_response(1, data, (size_t)transfer->actual_length, serial, sizeof(serial));
++	}
++	/* The final callback must drain before disconnect can release this handle. */
++	if (usbdev) collection_remove(&usbdev->rx_xfers, transfer);
++	if (error) {
++		restore_serial_log(transfer, check, error, serial);
++		if (usbdev) usbdev->alive = 0;
++	} else {
++		restore_serial_log(transfer, check, "authorized-identity-verified", serial);
++		strcpy(usbdev->serial, "00008132-001808291EA2401C");
++		/* PID1905 already exposes restore mux. Preserve its current mode;
++		 * generic GET_MODE/SET_MODE heuristics target ordinary mobile devices. */
++		device_complete_initialization(mode, transfer->dev_handle);
++	}
++	free(check->mode);
++	free(check);
++	free(transfer->buffer);
++	libusb_free_transfer(transfer);
++}
++
++static int verify_restore_serial(struct libusb_device_handle *handle, uint8_t index, struct mode_context *context)
++{
++	if (!index) return -1;
++	struct usb_device *usbdev = find_device(context->bus, context->address);
++	if (!usbdev || !usbdev->alive || usbdev->handle != handle) return -1;
++	struct libusb_transfer *transfer = libusb_alloc_transfer(0);
++	unsigned char *buffer = calloc(1, LIBUSB_CONTROL_SETUP_SIZE + 255);
++	struct restore_serial_context *check = calloc(1, sizeof(*check));
++	if (!transfer || !buffer || !check) { free(buffer); free(check); if (transfer) libusb_free_transfer(transfer); return -1; }
++	check->mode = context;
++	check->index = index;
++	libusb_fill_control_setup(buffer, LIBUSB_ENDPOINT_IN, LIBUSB_REQUEST_GET_DESCRIPTOR,
++		LIBUSB_DT_STRING << 8, 0, 255);
++	libusb_fill_control_transfer(transfer, handle, buffer, verify_restore_serial_cb, check, 1000);
++	/* Register before submission, so unplug cancellation cannot miss this request. */
++	collection_add(&usbdev->rx_xfers, transfer);
++	int result = libusb_submit_transfer(transfer);
++	if (result != 0) {
++		collection_remove(&usbdev->rx_xfers, transfer);
++		restore_serial_log(transfer, check, "language-request-submit-failed", "");
++		free(check); /* Caller retains context on initial submission failure. */
++		free(buffer);
++		libusb_free_transfer(transfer);
++	}
++	return result;
++}
++#endif
++
+ static int usb_device_add(libusb_device* dev)
+ {
+ 	int res;
+@@ -753,12 +908,18 @@ static int usb_device_add(libusb_device* dev)
+ 	}
+ 	if(devdesc.idVendor != VID_APPLE)
+ 		return -1;
++#ifdef _WIN32
++	/* Native Apple drivers retain every DFU/recovery/KIS PID. Only this final
++	 * restore PID is eligible for libusb; sole-Mac/port guards run above us. */
++	if (devdesc.idProduct != 0x1905) return -1;
++#else
+ 	if((devdesc.idProduct != PID_APPLE_T2_COPROCESSOR) &&
+ 	   ((devdesc.idProduct < PID_APPLE_SILICON_RESTORE_LOW) ||
+ 		(devdesc.idProduct > PID_APPLE_SILICON_RESTORE_MAX)) &&
+ 	   ((devdesc.idProduct < PID_RANGE_LOW) ||
+ 		(devdesc.idProduct > PID_RANGE_MAX)))
+ 		return -1;
++#endif
+ 	libusb_device_handle *handle;
+ 	usbmuxd_log(LL_INFO, "Found new device with v/p %04x:%04x at %d-%d", devdesc.idVendor, devdesc.idProduct, bus, address);
+ 	// No blocking operation can follow: it may be run in the libusb hotplug callback and libusb will refuse any
+@@ -801,10 +962,15 @@ static int usb_device_add(libusb_device* dev)
+ 	context->wLength = 4;
+ 	context->timeout = 1000;
+ 
++#ifdef _WIN32
++	if(verify_restore_serial(handle, devdesc.iSerialNumber, context) != 0) {
++#else
+ 	if(submit_vendor_specific(handle, context, get_mode_cb) != 0) {
++#endif
+ 		usbmuxd_log(LL_WARNING, "Could not request current mode from device %d-%d", bus, address);
+ 		// Schedule device for close and cleanup
+ 		usbdev->alive = 0;
++		free(context);
+ 		return -1;
+ 	}
+ 	return 0;

@@ -1,0 +1,9 @@
+$ErrorActionPreference='Stop'
+$log=Join-Path (Split-Path -Parent $PSScriptRoot) 'outputs\Mac1905-driver\attempt6-cleanup-runtime.log'
+try {
+ & (Join-Path $PSScriptRoot 'cleanup-mac1905-temporary.ps1') -ApplyAfterUserApproval *>&1 | Tee-Object -FilePath $log
+ exit 0
+} catch {
+ $_ | Out-String | Add-Content -LiteralPath $log
+ exit 1
+}

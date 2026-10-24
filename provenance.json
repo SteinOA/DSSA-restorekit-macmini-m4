@@ -1,0 +1,103 @@
+{
+  "IntendedPrivateRepository": "SteinOA/DSSA-restorekit-macmini-m4",
+  "Upstream": "https://github.com/fcjr/restorekit",
+  "UpstreamCommit": "3cf86558a2f721ff956c99eebc132a022291ddb5",
+  "UpstreamVersion": "v0.5.13",
+  "ExportLayout": "Full flattened source snapshot, including tracked submodule contents; no nested Git repositories",
+  "Submodules": [
+    {
+      "Path": "crates/restorekit-sys/vendor/libplist",
+      "UpstreamCommit": "32428abacb909988e8e960a8845a6430b17b6a60",
+      "OriginalUrl": "https://github.com/libimobiledevice/libplist.git",
+      "LicenseFiles": [
+        "COPYING",
+        "COPYING.LESSER",
+        "libcnary/COPYING"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/libimobiledevice-glue",
+      "UpstreamCommit": "da770a7687f35fbb981db4d7b47b1b032cd5c2c7",
+      "OriginalUrl": "https://github.com/libimobiledevice/libimobiledevice-glue.git",
+      "LicenseFiles": [
+        "COPYING"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/libusbmuxd",
+      "UpstreamCommit": "93eb168bf6b07472d17781328c21df0c60300524",
+      "OriginalUrl": "https://github.com/libimobiledevice/libusbmuxd.git",
+      "LicenseFiles": [
+        "COPYING"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/libirecovery",
+      "UpstreamCommit": "04d04f7cbaa4696504e91c1478ddd56160ed6776",
+      "OriginalUrl": "https://github.com/libimobiledevice/libirecovery.git",
+      "LicenseFiles": [
+        "COPYING"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/libtatsu",
+      "UpstreamCommit": "60a39f36d719344360ec2e87563ed43f61f0530f",
+      "OriginalUrl": "https://github.com/libimobiledevice/libtatsu.git",
+      "LicenseFiles": [
+        "COPYING"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/libimobiledevice",
+      "UpstreamCommit": "fa0f79190142bc309307967c058f89c1b36eb6b8",
+      "OriginalUrl": "https://github.com/libimobiledevice/libimobiledevice.git",
+      "LicenseFiles": [
+        "3rd_party/ed25519/LICENSE",
+        "3rd_party/libsrp6a-sha512/LICENSE",
+        "COPYING",
+        "COPYING.LESSER"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/idevicerestore",
+      "UpstreamCommit": "45145e9fdc8458022c61a4b87bd029b866d5bcdc",
+      "OriginalUrl": "https://github.com/libimobiledevice/idevicerestore.git",
+      "LicenseFiles": [
+        "COPYING"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/libzip",
+      "UpstreamCommit": "6f8a0cdd24a0dc6cce9dac4a7679da784ab124ea",
+      "OriginalUrl": "https://github.com/nih-at/libzip.git",
+      "LicenseFiles": [
+        "LICENSE"
+      ]
+    },
+    {
+      "Path": "crates/restorekit-sys/vendor/usbmuxd",
+      "UpstreamCommit": "3ded00c9985a5108cfc7591a309f9a23d57a8cba",
+      "OriginalUrl": "https://github.com/libimobiledevice/usbmuxd.git",
+      "LicenseFiles": [
+        "COPYING.GPLv2",
+        "COPYING.GPLv3"
+      ]
+    }
+  ],
+  "AdditionalSourceFiles": [
+    "crates/restorekit-sys/patches/idevicerestore/0007-fix-portdfu-event-synchronization.patch",
+    "crates/restorekit-sys/patches/idevicerestore/0008-fix-dfu-reconnect-event-predicates.patch",
+    "crates/restorekit-sys/vendor/usbmuxd/src/restore_identity.h",
+    "crates/restorekit-sys/vendor/usbmuxd/tests/restore_identity_fixtures.c"
+  ],
+  "MacRestoreStatus": "Not completed; no new restore authorized by this export",
+  "DeviceIdentityRestricted": true,
+  "OriginalSymlinks": [
+    {
+      "Path": "hardware/dongle-pro/lib",
+      "GitMode": "120000",
+      "Target": "../dongle-lite/lib",
+      "WindowsWorkingTreeRepresentation": "regular file containing link target; content preserved exactly"
+    }
+  ]
+}

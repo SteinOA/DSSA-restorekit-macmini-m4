@@ -1,0 +1,43 @@
+[package]
+name = "restorekit-cli"
+description = "CLI for DFU-restoring Apple Silicon Macs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "../../README.md"
+
+[[bin]]
+name = "restorekit"
+path = "src/main.rs"
+
+[features]
+default = ["history"]
+history = ["restorekit/history"]
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dependencies]
+restorekit = { path = "../restorekit", version = "0.5.13", default-features = false }
+clap = { version = "4", features = ["derive"] }
+indicatif = "0.17"
+serde_json = "1"
+clap_complete = "4"
+# Cross-platform serial for the `serial` console (COM ports on Windows, tty on
+# unix). No default features → no libudev on Linux, keeping the static build.
+serialport = { version = "4", default-features = false }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Registry",
+    "Win32_System_Threading",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }

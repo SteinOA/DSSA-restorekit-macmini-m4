@@ -1,0 +1,16 @@
+$ErrorActionPreference='Stop'
+$log=Join-Path $PSScriptRoot 'force-dfu-driver.log'
+try {
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class RkBindDfu {
+[DllImport("newdev.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+public static extern bool UpdateDriverForPlugAndPlayDevices(IntPtr hwnd,string HardwareId,string FullInfPath,uint flags,out bool reboot);
+}
+"@
+$reboot=$false
+$ok=[RkBindDfu]::UpdateDriverForPlugAndPlayDevices([IntPtr]::Zero,'USB\VID_05AC&PID_F014','C:\Windows\INF\oem288.inf',5,[ref]$reboot)
+"Success=$ok Win32Error=$([Runtime.InteropServices.Marshal]::GetLastWin32Error()) Reboot=$reboot" | Set-Content -LiteralPath $log
+if (-not $ok) { exit 1 }
+} catch { $_ | Out-String | Set-Content -LiteralPath $log; exit 1 }

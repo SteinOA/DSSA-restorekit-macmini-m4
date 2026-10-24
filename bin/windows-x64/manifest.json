@@ -1,0 +1,11 @@
+{
+  "File": "restorekit.exe",
+  "SHA256": "B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278",
+  "Bytes": 13707264,
+  "Platform": "Windows x64 GNU",
+  "Version": "0.5.13 with bounded local patches",
+  "BuildResult": "exit0",
+  "FixtureResult": "passed",
+  "MacRestoreCompleted": false,
+  "NewRestoreAuthorized": false
+}

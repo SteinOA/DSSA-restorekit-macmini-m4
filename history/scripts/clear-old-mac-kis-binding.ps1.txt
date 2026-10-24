@@ -1,0 +1,20 @@
+$ErrorActionPreference = 'Stop'
+$id = 'USB\VID_05AC&PID_1881\5&356B5377&0&13'
+$log = Join-Path $PSScriptRoot 'clear-old-mac-kis-binding.log'
+$location = 'PCIROOT(0)#PCI(1400)#USBROOT(0)#USB(13)'
+$present = @(Get-PnpDevice -PresentOnly)
+if ($present.InstanceId -contains $id) { throw 'Historical KIS node is present; stop without changing anything.' }
+$target = Get-PnpDevice -InstanceId $id -ErrorAction Stop
+$properties = @(Get-PnpDeviceProperty -InstanceId $id)
+if (($properties | Where-Object KeyName -eq 'DEVPKEY_Device_DriverInfPath').Data -ne 'oem288.inf') { throw 'Historical KIS driver mismatch.' }
+if (@(($properties | Where-Object KeyName -eq 'DEVPKEY_Device_LocationPaths').Data) -notcontains $location) { throw 'Historical KIS port mismatch.' }
+if (($properties | Where-Object KeyName -eq 'DEVPKEY_Device_Parent').Data -ne 'USB\ROOT_HUB30\4&2720BDB3&0&0') { throw 'Historical KIS parent hub mismatch.' }
+$parents = @($present | Where-Object InstanceId -match '^USB\\VID_05AC&PID_[0-9A-F]{4}\\')
+if ($parents.Count -ne 1 -or $parents[0].InstanceId -notmatch 'PID_1281\\.*ECID:001808291EA2401C_IBFL:BC') { throw 'Expected sole Mac in Recovery not found.' }
+if (Get-Process restorekit -ErrorAction SilentlyContinue) { throw 'A restore process exists.' }
+if ((Get-Content -LiteralPath 'C:\Windows\INF\oem178.inf' -Raw) -notmatch 'USB\\VID_05AC&PID_1881') { throw 'Staged AppleKIS match missing.' }
+if ((Get-Content -LiteralPath 'C:\Windows\INF\oem91.inf' -Raw) -notmatch 'KIS\\VID_05AC&PID_0001') { throw 'Staged AppleRSM match missing.' }
+'Removing only verified nonpresent KIS instance: ' + $id | Set-Content -LiteralPath $log
+& "$env:SystemRoot\System32\pnputil.exe" /remove-device $id | Add-Content -LiteralPath $log
+if ($LASTEXITCODE -ne 0) { throw ('PnP removal failed exit=' + $LASTEXITCODE) }
+'CurrentRecoveryInf=' + (Get-PnpDeviceProperty -InstanceId $parents[0].InstanceId -KeyName DEVPKEY_Device_DriverInfPath).Data | Add-Content -LiteralPath $log

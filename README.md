@@ -1,6 +1,21 @@
-# Mac mini M4 Windows restore research and tests
+# DSSA – Mac mini M4 restore fra Windows
 
-Private repository for the specifically authorized Mac mini M4 restoration work. Initial contents are a narrow, source-backed cloud test suite. Additional reviewed source, patches and handoff material will follow.
+Privat arkiv for arbeidet med en Mac mini M4 (Mac16,10) med tom intern 2 TB SSD. **macOS er ennå ikke installert.** Neste fysiske forsøk er utsatt til brukeren kommer tilbake i kveld.
+
+Start med [fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt). Program, kildekode, rettelser, kontrollskript og testresultater er bevart, slik at vi kan fortsette fra denne tilstanden.
+
+- `source/`: komplett kildekode fra RestoreKit v0.5.13 med lokale rettelser og innholdet i alle vendor-moduler.
+- `archives/source-snapshot.zip`: samme 2 133 kildefiler med nøyaktige opprinnelige byte. Bruk dette arkivet når kontrollsummene i `source-manifest.json` skal sammenlignes; enkelte vendor-moduler har egne Git-regler for linjeskift.
+- `patches/`, `provenance.json`, `source-manifest.json`: opprinnelse, endringer, lisenser og kontrollsummer.
+- `bin/windows-x64/restorekit.exe`: ferdig Windows-program, SHA256 `B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278`.
+- `ops/`: klargjorte skript for ett overvåket forsøk og etterfølgende opprydding. De forutsetter den eksisterende lokale arbeidsmappens oppsett; ikke kjør dem direkte fra et nytt Git-klone uten å lese notatet.
+- `driver/pid1905/`: kun den avgrensede INF/CAT-pakken for siste restore-modus. CAT inneholder det eksisterende offentlige signeringssertifikatet. Ingen privat signeringsnøkkel er bevart eller lastet opp. Historisk signaturkontroll betyr ikke at sertifikatet nå er betrodd på PC-en.
+- `results/`: programtesten, oppryddingsbevis og faktiske GitHub Actions-resultater.
+- `history/`: eldre skript som dokumentasjon, lagret som tekst; de skal ikke kjøres.
+
+Etter forsøk 6 ble oppdragets sertifikat, private nøkkel og nye driverpakke bekreftet borte. Windows-beskyttelsen er på. Senere midlertidig tillit/driverklargjøring må følge den avtalte godkjenningen og ryddes bort etter forsøket, også ved feil. Ikke bruk den opprinnelige brede `setup-driver`-kommandoen.
+
+Firmwarefilen er allerede bevart lokalt. IPSW, lokale sertifikatlagre, private nøkler, innloggingsopplysninger og rå PC-inventarer lastes ikke opp. Dette repoet starter ingen installasjon automatisk.
 
 ## What cloud tests establish
 
@@ -10,4 +25,4 @@ These are pure-data software tests. They access no USB devices, drivers, certifi
 
 `source-provenance.json` records SHA-256 hashes of the copied production header and original fixtures. Cloud workflow access is read-only (`contents: read`), with a ten-minute limit per job and no repository secrets.
 
-Do not commit firmware IPSWs, certificates, private keys, credentials, local account information or raw PC logs. Public release/publication is not authorized.
+The archived driver CAT contains a public signing certificate, not its private key or any Windows trust store. Do not commit firmware IPSWs, private keys, credentials, local trust-store exports or raw PC inventories. Public release/publication is not authorized.

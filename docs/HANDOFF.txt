@@ -1,0 +1,49 @@
+RestoreKit Mac mini M4 – private-repository handoff, 2026-10-24
+
+Purpose: restore a Mac mini M4 (Mac16,10 / j773gap) with a blank internal 2 TB SSD from Windows. macOS installation is NOT complete. Physical restoration is postponed until the user returns this evening. Preparation/private repository archival is authorized; a seventh restore attempt is not yet authorized. No scheduled action or reminder has been created.
+
+Upstream baseline: fcjr/restorekit v0.5.13, commit 3cf86558a2f721ff956c99eebc132a022291ddb5. Local modifications require preservation and review. Private repository created and verified: https://github.com/SteinOA/DSSA-restorekit-macmini-m4 . Nine parser CI jobs passed: https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40058880706 (Windows MSVC and Linux GCC/Clang, 900,000 cases plus fixtures).
+
+Observed progress:
+- Native Apple drivers worked through Port DFU, KIS, iBSS, iBEC and Recovery.
+- Attempt 6 reached the final Apple Silicon restore USB PID1905 and its narrowly scoped WinUSB binding worked.
+- The attempt failed at the host identity gate before installation progressed. It is NOT established that the physical device's raw serial string was itself wrong.
+- Known identity-format/LANGID defects and an unnecessary USB configuration change have been corrected in reviewed source. Pure-data fixtures pass with no USB access. This does not establish a successful compiled-program/hardware restore.
+- Main build exit 0; SHA256 B908AC86D7ECDAA09A16512B19AAD042C8E955F6F76C1D1DE6F9F3A921EAC278. Local check-usb passed in 2.98s, no Mac present; private 27016 closed and Apple 27015 unchanged. Full Mac data transfer/restore still unverified. Nine cloud parser jobs passed; results/cloud documents the exact scope.
+
+Hardware identities required for target scoping:
+- Port DFU controller physical PID F014, controller ECID165715DA257CBD11.
+- SoC CPID8132, BDID2A, ECID001808291EA2401C.
+- Physical KIS PID1881 exposes logical DFU through Apple's RSM stack; do not require a physical PID1227.
+- Recovery PID1281; final restore PID1905, serial00008132-001808291EA2401C.
+- Recheck the agreed physical USB port before operation; never infer identity solely from bus address or an OEM INF number.
+
+Security/current cleanup state:
+- Attempt6 cleanup result Success=true: no1905 package, no task certificate in user/machine stores, no private signing key, no unexpected deleted driver package.
+- A disconnected exact1905 devnode had to be backed up and removed before ordinary package deletion could succeed. No force/uninstall/broad-device removal.
+- Protected Apple packages AppleUSB/AppleKIS/AppleRSM were retained.
+- Defender protection was reported on at the last check.
+- The existing Apple loopback service on27015 was retained; temporary27016 listener stopped. Recheck current state, do not stop unrelated processes.
+
+Proposed attempt7 requires fresh explicit approval for ONE attempt plus any temporary security changes. If still needed, reuse the existing public-only certificate embedded in the unchanged CAT (thumbprint4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31) in LocalMachine/Root and TrustedPublisher temporarily. Never recreate a private key or sign again. Stage only macmini_restore_1905.inf, sole USBVID05ACPID1905. No live automatic driver-rebinding watcher. Native Apple early transport plus a target-limited embedded mux on127.0.0.1:27016. Preserve Apple's27015 process.
+
+Prepare+restore+cleanup must be one reviewed orchestration with finally after the restore process ends, on success/failure/cancellation. Cleanup the exact package by original name+hash, not OEM number alone; remove a blocking phantom devnode only with exact identity/absence/backup checks. Always remove task certificate trust and confirm the old private key remains absent, even if package cleanup fails. Verify final process/listener/driver/security state before ending work. A crash/power loss cannot guarantee finally; inspect cleanup first when resuming.
+
+Relevant local task files (repository mapping to be finalized):
+work/run-single-attempt7.ps1
+work/restore-apple-attempt7.ps1
+work/prepare-mac1905-temporary.ps1
+work/cleanup-mac1905-temporary.ps1
+work/mac1905-temporary-common.ps1
+work/remove-exact-phantom-mac1905.ps1
+work/restore-identity-fixtures-result.json
+outputs/Mac1905-driver/LES-MEG.md
+outputs/Mac1905-driver/FORSOK7-FORSLAG.md
+outputs/Mac1905-driver/Cleanup-20261024-052841-cc1b4156/result.json
+
+Firmware stays LOCAL, never upload the IPSW: UniversalMac_15.6.1_24G90_Restore.ipsw (16,814,137,790bytes), Apple-CDN origin; previously verified SHA1a19ba56bb931769580060647a466c5b2d09da761. The incomplete27.0.1 partial download is not the agreed restore image.
+
+No antivirus disabling, network alteration, unrelated process termination, test signing, signature-enforcement weakening, SecureBoot changes, private-key uploads or PC process inventories. No claim of success until the restore reports real completion and normal Mac startup is confirmed.
+
+
+Cleanup-source review addendum: the attempt7 coordinator now permits only the known residual exact1905-package cleanup after certificate/key cleanup has succeeded. The helper skips device removal if that exact devnode is already absent, permits one removal plus up to10seconds read-only PnP convergence, and never uses removal retries/force/uninstall. Other errors stop for review. PowerShell5/7 syntax and default read-only absent-state inspections PASS; live driver-cleanup paths have NOT been exercised. A missing space in Where-Object -ieq$id was found/fixed during inspection; the old post-removal abort may share that cause, but its original exception was not captured. Details: outputs/Mac1905-driver/cleanup-source-review.json. No driver/trust changes were performed by these tests.

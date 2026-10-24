@@ -12,3 +12,9 @@ work/
 *.crt
 *.cat
 .env
+!bin/
+!bin/windows-x64/
+!bin/windows-x64/restorekit.exe
+!driver/
+!driver/pid1905/
+!driver/pid1905/macmini_restore_1905.cat

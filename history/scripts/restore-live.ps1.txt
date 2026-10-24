@@ -1,0 +1,26 @@
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+Set-Location -LiteralPath $root
+$exe = Join-Path $root 'work\restorekit-source\target\x86_64-pc-windows-gnu\release\restorekit.exe'
+$ipsw = Join-Path $root 'work\firmware\UniversalMac_15.6.1_24G90_Restore.ipsw'
+$log = Join-Path $root 'work\restore-live.log'
+$raw = & $exe --json list
+if ($LASTEXITCODE -ne 0) { throw 'Device listing failed' }
+$state = $raw | ConvertFrom-Json
+$devices = @($state.devices)
+if ($devices.Count -ne 1) { throw 'Expected exactly one connected Apple device' }
+$device = $devices[0]
+if (($device.identity.model.identifier -ne 'Mac16,10') -or ($device.mode -ne 'dfu')) { throw 'Expected Mac mini M4 in DFU' }
+$ecid = '0x{0:x}' -f [UInt64]$device.ecid
+if ($ecid -ne '0x165715da257cbd11') { throw 'Unexpected target ECID' }
+if ((Get-Item -LiteralPath $ipsw).Length -ne 16814137790) { throw 'Unexpected firmware size' }
+Add-Type -TypeDefinition 'using System.Runtime.InteropServices; public static class RestoreAwake { [DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint flags); }'
+[RestoreAwake]::SetThreadExecutionState(2147483649) | Out-Null
+try {
+    & $exe --verbose restore --ipsw $ipsw --ecid $ecid --yes --cache-dir (Join-Path $root 'work\firmware') *> $log
+    $result = $LASTEXITCODE
+    Write-Output "Restore exit code: $result"
+} finally {
+    [RestoreAwake]::SetThreadExecutionState(2147483648) | Out-Null
+}
+exit $result

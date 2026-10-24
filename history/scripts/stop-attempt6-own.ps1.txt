@@ -1,0 +1,13 @@
+$ErrorActionPreference='Stop'
+$root=Split-Path -Parent $PSScriptRoot
+$exe=Join-Path $root 'work\restorekit-source\target\x86_64-pc-windows-gnu\release\restorekit.exe'
+$process=Get-Process -Id 97232 -ErrorAction Stop
+$retainedHandle=$process.Handle
+$identity=Get-CimInstance Win32_Process -Filter 'ProcessId=97232'
+if($identity.ExecutablePath -ine $exe -or $identity.CommandLine -notmatch '\brestore\b' -or $identity.CommandLine -notmatch '165715da257cbd11'){throw 'Own attempt6 process identity mismatch; nothing stopped'}
+if((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash -ne '1691E7BA35B2652E4A5A66C135B3B0B1CD1659A9DFFE8C28C28BE0DBF9972EF3'){throw 'Own executable digest mismatch; nothing stopped'}
+$tail=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'attempt6-20261024-051954-cffdfa60-stderr.log') -Tail 8
+if(($tail -join "`n") -notmatch 'Rejecting PID1905: physical serial did not match authorized Mac'){throw 'Attempt no longer shows the reviewed pre-installation rejection; nothing stopped'}
+$process.Kill()
+$process.WaitForExit()
+('Stopped only own attempt6 restore process PID97232 at '+(Get-Date -Format o)+'; identity and executable hash checked; no other process stopped.') | Set-Content -LiteralPath (Join-Path $root 'outputs\Mac1905-driver\attempt6-stop.log')

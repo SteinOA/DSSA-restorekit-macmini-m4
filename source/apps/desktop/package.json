@@ -1,0 +1,32 @@
+{
+  "name": "restorekit-desktop",
+  "private": true,
+  "version": "0.5.13",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "gen:licenses": "node scripts/gen-licenses.mjs",
+    "stage-helper": "bash ./stage-helper.sh",
+    "build:signed": "bash ./build-signed.sh",
+    "tauri": "node scripts/tauri.mjs",
+    "udev:install": "sudo cp ../../udev/51-restorekit.rules /etc/udev/rules.d/ && sudo udevadm control --reload-rules && sudo udevadm trigger",
+    "udev:uninstall": "sudo rm -f /etc/udev/rules.d/51-restorekit.rules && sudo udevadm control --reload-rules && sudo udevadm trigger"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.7.1",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5",
+    "@tauri-apps/cli": "^2",
+    "svelte": "^5",
+    "svelte-check": "^4",
+    "typescript": "^5",
+    "vite": "^6"
+  }
+}
