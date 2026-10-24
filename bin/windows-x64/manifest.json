@@ -1,11 +1,12 @@
 {
   "File": "restorekit.exe",
-  "SHA256": "48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D",
+  "SHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
   "Bytes": 13707264,
   "Platform": "Windows x64 GNU",
-  "Version": "0.5.13 with actual-M4 zero-padding regression fix",
+  "Version": "v0.5.13 with native Windows C connector fixed to private27016",
   "BuildResult": "exit0",
-  "FixtureResult": "passed",
+  "LocalNativeCProbeCases": 3,
+  "CloudResults": "pending",
   "MacRestoreCompleted": false,
   "NewRestoreAuthorized": false
 }

@@ -1,0 +1,8 @@
+{
+  "Test": "Process-only Win32 environment versus UCRT getenv",
+  "CrtBefore": null,
+  "Win32After": "127.0.0.1:27016",
+  "CrtAfter": null,
+  "SystemEnvironmentChanged": false,
+  "UsbAccessed": false
+}

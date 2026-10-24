@@ -1,0 +1,26 @@
+diff --git a/src/libusbmuxd.c b/src/libusbmuxd.c
+index 6b7d220..b6a77f1 100644
+--- a/src/libusbmuxd.c
++++ b/src/libusbmuxd.c
+@@ -164,6 +164,13 @@ static usbmuxd_device_info_t *devices_find(uint32_t handle)
+ static int connect_usbmuxd_socket()
+ {
+ 	int res = -1;
++#if defined(_WIN32) && defined(RESTOREKIT_PRIVATE_WINDOWS_MUX)
++	/* Rust's Win32 process environment does not update the UCRT getenv
++	 * snapshot. This restore build must never fall back to Apple's mux,
++	 * or accept an inherited endpoint that bypasses the private service. */
++	res = socket_connect("127.0.0.1", 27016);
++	return res < 0 ? -errno : res;
++#else
+ 	char *usbmuxd_socket_addr = getenv("USBMUXD_SOCKET_ADDRESS");
+ 	if (usbmuxd_socket_addr) {
+ 		if (strncmp(usbmuxd_socket_addr, "UNIX:", 5) == 0) {
+@@ -227,6 +234,7 @@ static int connect_usbmuxd_socket()
+ 		res = -errno;
+ 	}
+ 	return res;
++#endif
+ }
+ 
+ static void sanitize_udid(usbmuxd_device_info_t *devinfo)

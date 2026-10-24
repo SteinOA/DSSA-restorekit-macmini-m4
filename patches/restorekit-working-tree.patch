@@ -49,10 +49,10 @@ index 2342e4c..5592c76 100644
              elevated,
              result_file,
 diff --git a/crates/restorekit-sys/build.rs b/crates/restorekit-sys/build.rs
-index f2383c3..475082a 100644
+index f2383c3..5c51e52 100644
 --- a/crates/restorekit-sys/build.rs
 +++ b/crates/restorekit-sys/build.rs
-@@ -200,7 +200,7 @@ fn ensure_submodules(manifest: &Path, vendor: &Path) {
+@@ -200,12 +200,21 @@ fn ensure_submodules(manifest: &Path, vendor: &Path) {
  /// (e.g. `progtest.m4`), which aborts autoreconf. Forcing the correct POSIX
  /// dirs sidesteps the Win32↔POSIX round-trip. `/usr/share/aclocal` holds the
  /// automake/gettext macros; `/mingw64/share/aclocal` holds `pkg.m4` et al.
@@ -61,7 +61,42 @@ index f2383c3..475082a 100644
  
  /// Run autogen + configure + make + make install into the staging prefix.
  fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
-@@ -280,6 +280,15 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
+     let marker = deps.prefix.join(format!(".built-{name}"));
+-    if marker.exists() {
++    let private_windows_mux = deps.windows && name == "libusbmuxd";
++    let stamp = if private_windows_mux {
++        use std::hash::{Hash, Hasher};
++        let source = src.join("src/libusbmuxd.c");
++        println!("cargo:rerun-if-changed={}", source.display());
++        let mut hash = std::collections::hash_map::DefaultHasher::new();
++        std::fs::read(source).unwrap().hash(&mut hash);
++        format!("private-windows-mux-v1-{:016x}", hash.finish())
++    } else { String::new() };
++    if marker.exists() && std::fs::read_to_string(&marker).ok().as_deref() == Some(stamp.as_str()) {
+         return;
+     }
+     println!("cargo:warning=building {name} from source");
+@@ -251,6 +260,8 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
+         }
+     }
+ 
++    let mut flags = deps.cflags();
++    if private_windows_mux { flags.push_str(" -DRESTOREKIT_PRIVATE_WINDOWS_MUX=1"); }
+     let mut configure = shell(deps.windows, &deps.path(&src.join("configure")));
+     configure
+         .current_dir(&build_dir)
+@@ -259,8 +270,8 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
+         .arg("--disable-shared")
+         .arg("--without-cython")
+         .env("PKG_CONFIG_PATH", deps.pkg_config_path())
+-        .env("CFLAGS", deps.cflags())
+-        .env("CPPFLAGS", deps.cflags())
++        .env("CFLAGS", &flags)
++        .env("CPPFLAGS", &flags)
+         .env("LDFLAGS", deps.ldflags());
+     // A stale-timestamp maintainer-mode rebuild can re-invoke aclocal from
+     // configure/make, so keep the sanitized aclocal path in scope on Windows.
+@@ -280,6 +291,15 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
      }
      run(&mut configure, &format!("{name} configure"));
      quote_libtool_globs(&build_dir.join("libtool"));
@@ -77,7 +112,16 @@ index f2383c3..475082a 100644
  
      let jobs = env::var("NUM_JOBS").unwrap_or_else(|_| "4".into());
      let mut make = Command::new("make");
-@@ -359,6 +368,9 @@ fn build_libzip(src: &Path, deps: &Deps) {
+@@ -301,7 +321,7 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
+         make_install.env("ACLOCAL_PATH", MSYS_ACLOCAL_PATH);
+     }
+     run(&mut make_install, &format!("{name} make install"));
+-    std::fs::write(&marker, "").unwrap();
++    std::fs::write(&marker, stamp).unwrap();
+ }
+ 
+ /// Quote the file globs in the generated `libtool` script's convenience-library
+@@ -359,6 +379,9 @@ fn build_libzip(src: &Path, deps: &Deps) {
      if let Some(inc) = &deps.zlib_include {
          cfg.define("ZLIB_INCLUDE_DIR", inc);
      }
@@ -87,7 +131,7 @@ index f2383c3..475082a 100644
      let dst = cfg.build();
      // cmake crate installs into <dst>; mirror into our prefix if separate.
      let _ = dst;
-@@ -504,6 +516,7 @@ fn compile_idevicerestore(src: &Path, deps: &Deps) {
+@@ -504,6 +527,7 @@ fn compile_idevicerestore(src: &Path, deps: &Deps) {
  /// into a static archive so restorekit can run an in-process usbmuxd on Linux.
  fn compile_usbmuxd(src: &Path, deps: &Deps) {
      let src_dir = src.join("src");
@@ -95,7 +139,7 @@ index f2383c3..475082a 100644
      let mut build = cc::Build::new();
      build
          .include(&src_dir)
-@@ -568,6 +581,9 @@ fn compile_usbmuxd(src: &Path, deps: &Deps) {
+@@ -568,6 +592,9 @@ fn compile_usbmuxd(src: &Path, deps: &Deps) {
              if skip.contains(&name) {
                  continue;
              }
@@ -106,7 +150,7 @@ index f2383c3..475082a 100644
              count += 1;
          }
 diff --git a/crates/restorekit-sys/csrc/usbmuxd_server.c b/crates/restorekit-sys/csrc/usbmuxd_server.c
-index a970744..30732bd 100644
+index a970744..a301572 100644
 --- a/crates/restorekit-sys/csrc/usbmuxd_server.c
 +++ b/crates/restorekit-sys/csrc/usbmuxd_server.c
 @@ -21,9 +21,8 @@
@@ -121,7 +165,21 @@ index a970744..30732bd 100644
  #else
  #include <fcntl.h>
  #include <poll.h>
-@@ -79,7 +78,10 @@ static int create_loopback_socket(void)
+@@ -66,6 +65,13 @@ void preflight_device_remove_cb(void *data)
+ 
+ static int listenfd = -1;
+ static char socket_path_buf[256];
++#ifdef _WIN32
++static volatile LONG accepted_clients;
++long restorekit_usbmuxd_accepted_clients(void)
++{
++    return InterlockedCompareExchange(&accepted_clients, 0, 0);
++}
++#endif
+ 
+ /* ── helpers ─────────────────────────────────────────────────────── */
+ 
+@@ -79,7 +85,10 @@ static int create_loopback_socket(void)
      }
  
      int one = 1;
@@ -133,7 +191,7 @@ index a970744..30732bd 100644
  
      struct sockaddr_in addr;
      memset(&addr, 0, sizeof(addr));
-@@ -152,10 +154,18 @@ static int create_unix_socket(const char *path)
+@@ -152,14 +161,25 @@ static int create_unix_socket(const char *path)
  
  /* ── public API called from Rust ─────────────────────────────────── */
  
@@ -152,7 +210,24 @@ index a970744..30732bd 100644
      snprintf(socket_path_buf, sizeof(socket_path_buf), "%s", sock_path);
  
      should_exit    = 0;
-@@ -177,20 +187,24 @@ int restorekit_usbmuxd_start(const char *sock_path)
+     should_discover = 0;
++#ifdef _WIN32
++    InterlockedExchange(&accepted_clients, 0);
++#endif
+ 
+ #ifdef _WIN32
+     WSADATA wsa;
+@@ -171,26 +191,34 @@ int restorekit_usbmuxd_start(const char *sock_path)
+ 
+     /* Quiet usbmuxd's own logging — it goes to stderr which is fine. */
+     log_level = LL_WARNING;
++#ifdef _WIN32
++    /* Retain handshake/activation milestones for the next physical diagnosis. */
++    log_level = LL_NOTICE;
++#endif
+ 
+     client_init();
+     device_init();
  
      usbmuxd_log(LL_NOTICE, "restorekit: initializing embedded usbmuxd");
  
@@ -185,6 +260,50 @@ index a970744..30732bd 100644
  
      usbmuxd_log(LL_NOTICE, "restorekit: embedded usbmuxd listening on %s", socket_path_buf);
      return 0;
+@@ -256,6 +284,7 @@ void restorekit_usbmuxd_run(void)
+                         fdlist_free(&pollfds);
+                         return;
+                     }
++                    InterlockedIncrement(&accepted_clients);
+                 }
+                 if (pollfds.owners[i] == FD_CLIENT) {
+                     client_process(pollfds.fds[i].fd, pollfds.fds[i].revents);
+diff --git a/crates/restorekit-sys/src/lib.rs b/crates/restorekit-sys/src/lib.rs
+index f7164ac..e72e7f8 100644
+--- a/crates/restorekit-sys/src/lib.rs
++++ b/crates/restorekit-sys/src/lib.rs
+@@ -225,6 +225,31 @@ pub fn usbmuxd_cleanup() {
+     unsafe { restorekit_usbmuxd_cleanup() }
+ }
+ 
++#[cfg(target_os = "windows")]
++extern "C" {
++    fn restorekit_usbmuxd_accepted_clients() -> std::os::raw::c_long;
++    fn usbmuxd_get_device_list(devices: *mut *mut c_void) -> c_int;
++    fn usbmuxd_device_list_free(devices: *mut *mut c_void) -> c_int;
++}
++
++/// Exercise the same native C connector used by idevicerestore. A Rust TCP
++/// probe alone cannot detect a stale C-runtime environment selecting Apple.
++#[cfg(target_os = "windows")]
++pub fn probe_native_private_mux() -> std::result::Result<(), String> {
++    unsafe {
++        let before = restorekit_usbmuxd_accepted_clients();
++        let mut devices = std::ptr::null_mut();
++        let count = usbmuxd_get_device_list(&mut devices);
++        if !devices.is_null() { usbmuxd_device_list_free(&mut devices); }
++        let after = restorekit_usbmuxd_accepted_clients();
++        if count < 0 { return Err(format!("native C ListDevices failed: {count}")); }
++        if after <= before {
++            return Err("native C client did not connect to the private mux (possible CRT environment split)".into());
++        }
++        Ok(())
++    }
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
 diff --git a/crates/restorekit-sys/vendor/usbmuxd b/crates/restorekit-sys/vendor/usbmuxd
 --- a/crates/restorekit-sys/vendor/usbmuxd
 +++ b/crates/restorekit-sys/vendor/usbmuxd
@@ -280,7 +399,7 @@ index 92f88e2..a0064b6 100644
      loop {
          let n = resp
 diff --git a/crates/restorekit/src/restore.rs b/crates/restorekit/src/restore.rs
-index 6035120..b9a9b36 100644
+index 6035120..2ba7bd6 100644
 --- a/crates/restorekit/src/restore.rs
 +++ b/crates/restorekit/src/restore.rs
 @@ -212,11 +212,66 @@ fn is_transient_failure(err: &Error) -> bool {
@@ -326,7 +445,7 @@ index 6035120..b9a9b36 100644
 +        }
 +        Ok(())
 +    };
-+    probe().map_err(|message| Error::UsbmuxdFailed(format!(
++    probe().and_then(|_| sys::probe_native_private_mux()).map_err(|message| Error::UsbmuxdFailed(format!(
 +        "private Windows usbmux protocol probe failed: {message}"
 +    )))
 +}

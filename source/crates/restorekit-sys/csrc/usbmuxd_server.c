@@ -65,6 +65,13 @@ void preflight_device_remove_cb(void *data)
 
 static int listenfd = -1;
 static char socket_path_buf[256];
+#ifdef _WIN32
+static volatile LONG accepted_clients;
+long restorekit_usbmuxd_accepted_clients(void)
+{
+    return InterlockedCompareExchange(&accepted_clients, 0, 0);
+}
+#endif
 
 /* ── helpers ─────────────────────────────────────────────────────── */
 
@@ -170,6 +177,9 @@ int restorekit_usbmuxd_start(const char *sock_path)
 
     should_exit    = 0;
     should_discover = 0;
+#ifdef _WIN32
+    InterlockedExchange(&accepted_clients, 0);
+#endif
 
 #ifdef _WIN32
     WSADATA wsa;
@@ -181,6 +191,10 @@ int restorekit_usbmuxd_start(const char *sock_path)
 
     /* Quiet usbmuxd's own logging — it goes to stderr which is fine. */
     log_level = LL_WARNING;
+#ifdef _WIN32
+    /* Retain handshake/activation milestones for the next physical diagnosis. */
+    log_level = LL_NOTICE;
+#endif
 
     client_init();
     device_init();
@@ -270,6 +284,7 @@ void restorekit_usbmuxd_run(void)
                         fdlist_free(&pollfds);
                         return;
                     }
+                    InterlockedIncrement(&accepted_clients);
                 }
                 if (pollfds.owners[i] == FD_CLIENT) {
                     client_process(pollfds.fds[i].fd, pollfds.fds[i].revents);

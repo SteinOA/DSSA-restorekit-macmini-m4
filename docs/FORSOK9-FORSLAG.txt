@@ -1,0 +1,13 @@
+FORSLAG TIL ETT FORSØK9 – IKKE STARTET
+Program: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93.
+Ny rettelse: native Windows C-klient bruker direkte privat127.0.0.1:27016 og testes før firmware sendes. Lokal testRED før rettelsen, GREEN etter. Skytestresultat skal foreligge før forslaget tas til bruk.
+
+Systemendring som krever ny godkjenning fra brukeren: Kun samme eksakte INF/CAT for USB/VID_05AC&PID_1905 og eksisterende offentlige sertifikat4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31 midlertidig i LocalMachine/Root og LocalMachine/TrustedPublisher. Ingen privat nøkkel gjenskapes. Sertifikatet mangler BasicConstraints; det er ikke eksplisitt CA=false. Ingen testsignering, avslått signaturkontroll eller endring av antivirus.
+INF SHA256:96900A82E846BDE1999787C566D8B22DC52D108545B9E76FCAA4DA2F79334E02
+CAT SHA256:6597FB9FC3F12FF4BA5B99154AEEEBA79CFB716A701DAFAB689DDBAE835DD3CB
+Samme pakke som tidligere vist under outputs/Mac1905-driver/pakke.
+
+Driverklargjøring skjer før restore. Ingen driverbytter eller automatiske restore-gjentakelser under kjøringen. Apples drivere og tjenesten27015 beholdes. Kun én restore mot samme Mac etter fersk kontroll av DFU, fysisk port og identitet.
+Privat hjelpertjeneste lytter bare127.0.0.1:27016 og stoppes etter forsøket. Tillit, eventuelle eksakte nøkkelrester og eksakt1905-pakke fjernes etterpå også ved feil. Hvis Windows holder pakken knyttet til den frakoblede enhetsregistreringen, sikkerhetskopieres og fjernes kun den eksakte ikke-tilstedeværende1905-registreringen før vanlig pakkesletting. Ingen force/uninstall eller sletting av andre drivere. Sluttlogg bekrefter resultatet.
+
+Klargjorte skript: work/run-single-attempt9.ps1 og work/restore-apple-attempt9.ps1. De er ikke kjørt. Strømmen skal først trekkes ut etter avtale; DFU-sekvensen først når klargjøringen er ferdig.

@@ -205,7 +205,16 @@ const MSYS_ACLOCAL_PATH: &str = "/usr/share/aclocal:/ucrt64/share/aclocal";
 /// Run autogen + configure + make + make install into the staging prefix.
 fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
     let marker = deps.prefix.join(format!(".built-{name}"));
-    if marker.exists() {
+    let private_windows_mux = deps.windows && name == "libusbmuxd";
+    let stamp = if private_windows_mux {
+        use std::hash::{Hash, Hasher};
+        let source = src.join("src/libusbmuxd.c");
+        println!("cargo:rerun-if-changed={}", source.display());
+        let mut hash = std::collections::hash_map::DefaultHasher::new();
+        std::fs::read(source).unwrap().hash(&mut hash);
+        format!("private-windows-mux-v1-{:016x}", hash.finish())
+    } else { String::new() };
+    if marker.exists() && std::fs::read_to_string(&marker).ok().as_deref() == Some(stamp.as_str()) {
         return;
     }
     println!("cargo:warning=building {name} from source");
@@ -251,6 +260,8 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
         }
     }
 
+    let mut flags = deps.cflags();
+    if private_windows_mux { flags.push_str(" -DRESTOREKIT_PRIVATE_WINDOWS_MUX=1"); }
     let mut configure = shell(deps.windows, &deps.path(&src.join("configure")));
     configure
         .current_dir(&build_dir)
@@ -259,8 +270,8 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
         .arg("--disable-shared")
         .arg("--without-cython")
         .env("PKG_CONFIG_PATH", deps.pkg_config_path())
-        .env("CFLAGS", deps.cflags())
-        .env("CPPFLAGS", deps.cflags())
+        .env("CFLAGS", &flags)
+        .env("CPPFLAGS", &flags)
         .env("LDFLAGS", deps.ldflags());
     // A stale-timestamp maintainer-mode rebuild can re-invoke aclocal from
     // configure/make, so keep the sanitized aclocal path in scope on Windows.
@@ -310,7 +321,7 @@ fn build_autotools(src: &Path, name: &str, version: &str, deps: &Deps) {
         make_install.env("ACLOCAL_PATH", MSYS_ACLOCAL_PATH);
     }
     run(&mut make_install, &format!("{name} make install"));
-    std::fs::write(&marker, "").unwrap();
+    std::fs::write(&marker, stamp).unwrap();
 }
 
 /// Quote the file globs in the generated `libtool` script's convenience-library

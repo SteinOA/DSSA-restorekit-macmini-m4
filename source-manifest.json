@@ -936,8 +936,8 @@
   },
   {
     "Path": "crates/restorekit-sys/build.rs",
-    "Bytes": 28724,
-    "SHA256": "F1BF14E446D9DDCE44D0C633C22AD310AAF512C94D852E493CA34C783A6F06D9"
+    "Bytes": 29409,
+    "SHA256": "C5EA17C069205EC721C5401FC8B54827480783DE12BDD0CD534DFADECED767E2"
   },
   {
     "Path": "crates/restorekit-sys/Cargo.toml",
@@ -951,8 +951,8 @@
   },
   {
     "Path": "crates/restorekit-sys/csrc/usbmuxd_server.c",
-    "Bytes": 11718,
-    "SHA256": "CAFA6A72E355AA7819AF42F4DAAE00E29ECA1EB00C690FE21F5C8A64DC02B414"
+    "Bytes": 12167,
+    "SHA256": "70A0674C2A8AFD1D0B3EAD21EB228EA0265882A211B3A473DF8D412BF4E3A819"
   },
   {
     "Path": "crates/restorekit-sys/csrc/win_shim/_rk_win_sockcompat.h",
@@ -1051,8 +1051,8 @@
   },
   {
     "Path": "crates/restorekit-sys/src/lib.rs",
-    "Bytes": 9633,
-    "SHA256": "E74F75E0E15C3899307CB0027657F407EA829C233C49AC40A493FCA834F00A1D"
+    "Bytes": 10745,
+    "SHA256": "26EE0AE801C65183BEC1B046C0C0743F175BABE7A7897F3568A548009FF5A3DE"
   },
   {
     "Path": "crates/restorekit-sys/vendor/idevicerestore/.github/FUNDING.yml",
@@ -4416,8 +4416,8 @@
   },
   {
     "Path": "crates/restorekit-sys/vendor/libusbmuxd/src/libusbmuxd.c",
-    "Bytes": 46774,
-    "SHA256": "1D65D738A3A412AD8036563EC350FAF7779F93028DF458F08F3550796F01FBDD"
+    "Bytes": 47146,
+    "SHA256": "06092B1E5B565DBD6B30C37A0726B4D7B2EEA504E2F6BF44EC1B1B19F39F44B0"
   },
   {
     "Path": "crates/restorekit-sys/vendor/libusbmuxd/src/Makefile.am",
@@ -9321,8 +9321,8 @@
   },
   {
     "Path": "crates/restorekit/src/restore.rs",
-    "Bytes": 27502,
-    "SHA256": "D5DDD69CCEB5951E4862C99CC71FA151548795B939CA996F7584A767DDB30969"
+    "Bytes": 27548,
+    "SHA256": "B41BECABF0CD5001999BFA857FFDB209B13876F0F8D1FC84274178E60FA98B52"
   },
   {
     "Path": "crates/restorekit/src/usbmuxd.rs",

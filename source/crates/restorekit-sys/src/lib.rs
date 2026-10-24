@@ -225,6 +225,31 @@ pub fn usbmuxd_cleanup() {
     unsafe { restorekit_usbmuxd_cleanup() }
 }
 
+#[cfg(target_os = "windows")]
+extern "C" {
+    fn restorekit_usbmuxd_accepted_clients() -> std::os::raw::c_long;
+    fn usbmuxd_get_device_list(devices: *mut *mut c_void) -> c_int;
+    fn usbmuxd_device_list_free(devices: *mut *mut c_void) -> c_int;
+}
+
+/// Exercise the same native C connector used by idevicerestore. A Rust TCP
+/// probe alone cannot detect a stale C-runtime environment selecting Apple.
+#[cfg(target_os = "windows")]
+pub fn probe_native_private_mux() -> std::result::Result<(), String> {
+    unsafe {
+        let before = restorekit_usbmuxd_accepted_clients();
+        let mut devices = std::ptr::null_mut();
+        let count = usbmuxd_get_device_list(&mut devices);
+        if !devices.is_null() { usbmuxd_device_list_free(&mut devices); }
+        let after = restorekit_usbmuxd_accepted_clients();
+        if count < 0 { return Err(format!("native C ListDevices failed: {count}")); }
+        if after <= before {
+            return Err("native C client did not connect to the private mux (possible CRT environment split)".into());
+        }
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

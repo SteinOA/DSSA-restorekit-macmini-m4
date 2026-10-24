@@ -5,7 +5,7 @@ Set-Location -LiteralPath $root
 $exe=Join-Path $root 'work\restorekit-source\target\x86_64-pc-windows-gnu\release\restorekit.exe'
 if((Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash -ine $ExpectedHash){throw 'Main executable hash mismatch'}
 if(@(Get-CimInstance Win32_Process | Where-Object Name -eq 'restorekit.exe').Count){throw 'Another restorekit process is present; no test started'}
-$devices=@(Get-PnpDevice -PresentOnly | Where-Object InstanceId -match '^USB\\VID_05AC')
+$devices=@(Get-PnpDevice -PresentOnly | Where-Object InstanceId -match '^(USB|KIS)\\VID_05AC')
 if($devices.Count){throw 'An Apple USB device is present; this no-device test was not started'}
 $before=@(Get-NetTCPConnection -State Listen -LocalPort 27015,27016 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,OwningProcess)
 if(@($before | Where-Object LocalPort -eq 27016).Count){throw 'Private port already in use; no test started'}

@@ -1,0 +1,16 @@
+NATIVE WINDOWS-PORT – RETTET OG LOKALT TESTET 24.10.2026
+macOS er ennå ikke installert. Ingen nytt fysisk forsøk er startet eller godkjent etter forsøk8.
+
+Konkret feil: Rust satte USBMUXD_SOCKET_ADDRESS i Windows-prosessmiljøet, men C-klienten leste getenv fra UCRTs egen miljøkopi. Når denne manglet verdien, falt C-klienten tilbake til Apples127.0.0.1:27015. Den gamle testen sendte en egen Rust-forespørsel direkte til27016 og oppdaget ikke dette.
+
+Bevis før rettelse: Prosessmiljø og UCRT getenv viste forskjellige verdier i en isolert test. Deretter ble samme feil gjenskapt gjennom den faktiske native C ListDevices-klienten: Rust-testen bestod, men C-klienten nådde ikke privatserveren. Se native-endpoint-red-result.json. Testen brukte ingen Mac, firmware, driver- eller sertifikatendring.
+Microsoft dokumenterer skillet: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/getenv-wgetenv?view=msvc-170
+
+Rettelse: Bare denne Windows-restoreversjonen av C-biblioteket er kompilert med RESTOREKIT_PRIVATE_WINDOWS_MUX. Da bruker ALLE C-forbindelser direkte127.0.0.1:27016, uten getenv eller tilbakefall til Apples27015. Linux og andre standardbygg beholder eksisterende kode. Byggemarkøren følger C-kildens innhold, slik at gammel statisk kode ikke gjenbrukes.
+Ny kontroll før restore: Den faktiske C-klienten må utføre ListDevices, og privatserveren må ha akseptert dens forbindelse. Hvis dette feiler, starter ikke firmwareoverføringen. Loggnivået beholder nå milepæler for mux-håndtrykket.
+
+ProgramSHA256: B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93
+Lokale tester: 3/3 bestod med fraværende arvet endepunkt, arvet Apple27015 og arvet stengt lokalport1. Faktisk C-klient, privatserver, protokollsvar og avslutning ble testet. Apples lytter var uendret og privat27016 borte etter hver test. Skytester av samme program på tre uavhengige Windows2022-maskiner: pågår.
+
+Avgrensning: Dette retter en bevist rutingsfeil. Det er ikke bevist at denne alene forklarer RX-stoppet eller at neste fulle Mac-installasjon lykkes. Serienummerrettelsen fra før beholdes. Ingen ny endring av USB-konfigurasjon, driverpakke, sertifikat, signering eller sikkerhetsinnstillinger er gjort.
+Sertifikattillit og PID1905-driver fra forsøk8 er fortsatt fjernet; disse importeres ikke igjen uten egen godkjenning for neste forsøk.

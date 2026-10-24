@@ -1,8 +1,8 @@
 {
   "Archive": "archives/source-snapshot.zip",
-  "Bytes": 25808589,
-  "SHA256": "AFA1DA44CAEAA5CB004D1D658D763B471017B458E72527A07E3DC8058D66952B",
+  "Bytes": 25809510,
+  "SHA256": "57D26B3716D00BB680A5B5F40401121DA75E390399026AD335522A2E56F2B075",
   "SourceFiles": 2133,
   "SourceManifest": "source-manifest.json",
-  "Purpose": "Exact corrected source bytes including real-Mac zero-padding regression"
+  "Purpose": "Exact corrected source bytes including native Windows C endpoint routing and real-Mac serial regression"
 }

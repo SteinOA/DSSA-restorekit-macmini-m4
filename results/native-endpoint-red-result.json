@@ -1,0 +1,8 @@
+{
+  "ExpectedFailureReproduced": true,
+  "ProgramSHA256": "38CCF281BC7504D50CAE9D10C2CF5D30B569661A2A47AC783C45C77F26E0A718",
+  "CheckError": "USB check failed with exit code 1",
+  "NativeError": "{\"event\":\"error\",\"message\":\"failed to start usbmuxd: private Windows usbmux protocol probe failed: native C client did not connect to the private mux (possible CRT environment split)\"}\n[20:58:39.564][1] libusb does not support hotplug events\r\n",
+  "Scope": "Actual C ListDevices client; no Apple USB present; no restore command; Rust-only probe succeeded first",
+  "ResultDirectory": "C:\\Users\\stein\\Documents\\Codex\\2026-10-24\\imazing-og-leverand-ren-sier-begge\\outputs\\USB-lesetest\\20261024-205838"
+}

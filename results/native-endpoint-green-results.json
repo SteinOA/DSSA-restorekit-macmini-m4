@@ -1,0 +1,35 @@
+[
+  {
+    "Case": "absent",
+    "InheritedEndpoint": null,
+    "ProgramSHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+    "NativeCProbePassed": true,
+    "ExitCode": 0,
+    "AppleListenerUnchanged": true,
+    "PrivateListenerGone": true,
+    "Seconds": 3.13,
+    "NoAppleDevicePresentAtStart": true
+  },
+  {
+    "Case": "inherited-apple27015",
+    "InheritedEndpoint": "127.0.0.1:27015",
+    "ProgramSHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+    "NativeCProbePassed": true,
+    "ExitCode": 0,
+    "AppleListenerUnchanged": true,
+    "PrivateListenerGone": true,
+    "Seconds": 1.72,
+    "NoAppleDevicePresentAtStart": true
+  },
+  {
+    "Case": "inherited-closed-port",
+    "InheritedEndpoint": "127.0.0.1:1",
+    "ProgramSHA256": "B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93",
+    "NativeCProbePassed": true,
+    "ExitCode": 0,
+    "AppleListenerUnchanged": true,
+    "PrivateListenerGone": true,
+    "Seconds": 1.79,
+    "NoAppleDevicePresentAtStart": true
+  }
+]

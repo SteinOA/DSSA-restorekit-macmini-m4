@@ -251,7 +251,7 @@ pub(crate) fn probe_usbmux_endpoint(port: u16) -> Result<()> {
         }
         Ok(())
     };
-    probe().map_err(|message| Error::UsbmuxdFailed(format!(
+    probe().and_then(|_| sys::probe_native_private_mux()).map_err(|message| Error::UsbmuxdFailed(format!(
         "private Windows usbmux protocol probe failed: {message}"
     )))
 }
