@@ -1,0 +1,23 @@
+STATUS ETTER FORSØK 8 – 24.10.2026
+macOS er ikke installert. Ikke start et nytt fysisk forsøk automatisk.
+
+Brukeren godkjente nøyaktig ett forsøk 8 med eksisterende offentlig sertifikat og kun PID1905-driveren. Ingen ny privat nøkkel ble laget.
+Program SHA256: 48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D.
+Fersk kontroll godkjente samme DFU-kontroller, identitet, port og Apple-drivere. Programmet kjørte én gang fra 20:33:58 til 20:39:23, avslutning 1. Ingen automatisk restore-repetisjon eller driverbytte under kjøringen.
+
+BEKREFTET LØST: Den faktiske 82-byte USB-strengbeskrivelsen med korrekt serienummer og 15 avsluttende null-UTF16-enheter godkjennes nå. Logg 20:34:35: authorized-identity-verified, decoded_serial=00008132-001808291EA2401C. Serienummerformatet er derfor ikke lenger neste uløste feil.
+
+NYTT STOPPUNKT: PID1905 ble bundet til korrekt avgrenset driver. Valg av USB-konfigurasjon 4, 3 og 2 ga LIBUSB_ERROR_BUSY; deretter ble config1/interface0 FF/FE/02 med bulkIN81/bulkOUT01 valgt. Loggen melder RX transfer stalled 20:36:48. Mac-en forsvant fra USB-listen. Programmet nådde tidsfristen med Device failed to enter restore mode. Ingen bekreftelse på at filsysteminstallasjonen startet eller at macOS kan starte.
+
+Årsaken til USB-datafeilen er ikke fastslått. Ikke påstå at lengre tidsfrist, sertifikatbytte, annen SSD eller ny serienummerendring vil løse den. Neste utviklingssteg trenger konkrete transport-/håndtrykksdiagnoser og test av relevante kodeendringer før et nytt fysisk forsøk foreslås. Ingen slik ny rettelse er bygget eller maskinvaretestet etter forsøk8.
+
+Private tjeneste127.0.0.1:27016 var borte etter programslutt; Apple27015 hadde samme eier/adresse. Ingen gjenværende restore-/watcherprosesser ble funnet av supervisoren.
+Brukeren meldte først svart skjerm og hvitt lys, deretter svart skjerm og oransje blinkende lys. Lampen alene bekrefter ikke DFU.
+
+OPPRYDDING FERDIG OG GODKJENT 20:45:17: Sluttlogg Cleanup-20261024-204330-a351ef75/result.json viser Success=true, RemainingCertificates=[], PrivateKeyStillExists=false, Remaining1905Packages=[], UnexpectedDeletedPackages=[], Errors=[]. Sertifikatet med eksakt avtrykk er borte fra LocalMachine/Root og LocalMachine/TrustedPublisher og øvrige gjennomsøkte lagre; CurrentUser/My og den opprinnelige CNG-nøkkelen er borte. Kun eksakt frakoblet1905-registrering ble fjernet, ingen andre driverpakker. Apples beskyttede INF-filer er uendret. Koordinatoren er avsluttet. Ingen nytt forsøk er startet eller godkjent.
+Sertifikatavtrykk: 4AB0DB3E9B0D6D055133E286B3D16F3460FBFB31.
+Sertifikatet mangler BasicConstraints-utvidelse; det er ikke et eksplisitt CA=false-felt. Ingen testsignering eller avslått signaturkontroll.
+
+Tidligere skytester for program48C9 bestod 3/3 programtester og 9/9 parsere. Disse testene uten fysisk Mac beviser ikke fungerende USB-dataoverføring eller installasjon. Ikke bruk dem som bevis for at forsøket8 lykkes.
+Lokale detaljerte logger: work/attempt8-20261024-203304-c8ec00f5-{stderr,stdout,supervisor}.log.
+

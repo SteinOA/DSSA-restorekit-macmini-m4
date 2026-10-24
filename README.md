@@ -1,6 +1,6 @@
 # DSSA – Mac mini M4 restore fra Windows
 
-Privat arkiv for arbeidet med en Mac mini M4 (Mac16,10) med tom intern 2 TB SSD. **macOS er ennå ikke installert.** Neste fysiske forsøk er utsatt til brukeren kommer tilbake i kveld.
+Privat arkiv for arbeidet med en Mac mini M4 (Mac16,10) med tom intern 2 TB SSD. **macOS er ennå ikke installert.** Forsøk 8 er avsluttet med feil før installasjon. Serienummerlesingen virker; USB-dataoverføringen stopper. Midlertidig sertifikattillit og driverpakke er fjernet. Se [resultatet fra forsøk 8](results/ATTEMPT8-RESULT.txt).
 
 Start med [fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt). Program, kildekode, rettelser, kontrollskript og testresultater er bevart, slik at vi kan fortsette fra denne tilstanden.
 
@@ -26,4 +26,5 @@ These are pure-data software tests. They access no USB devices, drivers, certifi
 `source-provenance.json` records SHA-256 hashes of the copied production header and original fixtures. Cloud workflow access is read-only (`contents: read`), with a ten-minute limit per job and no repository secrets.
 
 The archived driver CAT contains a public signing certificate, not its private key or any Windows trust store. Do not commit firmware IPSWs, private keys, credentials, local trust-store exports or raw PC inventories. Public release/publication is not authorized.
+
 

@@ -1,3 +1,7 @@
+SISTE STATUS: Forsøk8 avsluttet med feil 24.10.2026. Serienummerlesingen er bekreftet løst på fysisk Mac. Nytt stoppunkt er USB-dataforbindelsen (RX stall) før macOS-installasjon. Opprydding bestod; ingen sertifikattillit, privat nøkkel eller1905-driverpakke står igjen. Ingen nytt fysisk forsøk er godkjent. Se FORSOK8-RESULTAT.txt i outputs/Mac1905-driver, eller results/ATTEMPT8-RESULT.txt i repoet.
+
+ELDRE HISTORIKK FØLGER:
+
 CURRENT STATUS AFTER PHYSICAL ATTEMPT 7, EVENING 2026-10-24
 The previously archived B908 executable fails on this Mac's actual zero-padded USB serial descriptor. Do not use B908 for the next attempt. Actual descriptor was captured: 82 bytes, canonical 25-character authorized identity followed by 15 zero UTF16 units, successful transfer and LANGID0409. The new decoder accepts only a completely zero suffix after the exact authorized identity and rejects data after padding. A regression with the exact captured bytes fails against old code and passes after the fix.
 Current executable SHA256: 48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D. Build, exact-device fixture, 300k local varied cases and local no-device main service check pass. Cloud run40120482606:3/3 actual program checks pass;40120482702:9/9 parser jobs including captured-Mac fixture pass. Corrected source snapshot/binary/tests/results saved in this private repository. See results/cloud/ATTEMPT7-PADDING-RESULTS.txt and docs/FORTSETT-HER-I-KVELD.txt.
@@ -58,5 +62,6 @@ Cleanup-source review addendum: the attempt7 coordinator now permits only the kn
 FINAL PREPARATION RESULTS
 Full private snapshot tested: eb971be5c11457e83cb29b132b1d260eb461dd52. Actual B908 program passed check-usb on THREE independent Windows cloud runners (0.37/0.31/0.36s, exit0, private27016gone, existing27015unchanged). Seven ops scripts AST-only in PS5.1+PS7 across allthree:42syntaxchecksPASS. Nine parser jobs on same snapshot passed900,000cases. Results: results/cloud/MAIN-PROGRAM-RESULTS.md and linked workflow runs40059588962+40059589027. No physical Mac restore performed.
 Byte-exact source archive: archives/source-snapshot.zip (2,133 files); working source tree also available. Local16GBIPSW remainsready. No needto rebuild/redownloadfor the evening absent new evidence. Before stopping, fresh hostcheckcertificates0/privatekeyfalse/1905packageabsent/oldbroadpackageabsent/restores0/private27016listeners0; Defender realtime+tamperON. Mac installation NOTcomplete.
+
 
 

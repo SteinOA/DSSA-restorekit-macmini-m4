@@ -1,3 +1,7 @@
+SISTE STATUS: Forsøk8 avsluttet med feil 24.10.2026. Serienummerlesingen er bekreftet løst på fysisk Mac. Nytt stoppunkt er USB-dataforbindelsen (RX stall) før macOS-installasjon. Opprydding bestod; ingen sertifikattillit, privat nøkkel eller1905-driverpakke står igjen. Ingen nytt fysisk forsøk er godkjent. Se FORSOK8-RESULTAT.txt i outputs/Mac1905-driver, eller results/ATTEMPT8-RESULT.txt i repoet.
+
+ELDRE HISTORIKK FØLGER:
+
 FORSØK 7 – BEVIST FEIL OG RETTELSE, 24. OKTOBER 2026 KVELD
 Forsøk 7 kom til PID1905 med korrekt Windows-driver. Ingen macOS-installasjon ble startet. Rå USB-lesing var vellykket (status 0, språk 0409) og ga 82 byte: korrekt 25-tegns serienummer og 15 UTF-16-nulltegn. B908-dekoderen avviste nullutfyllingen. Tidligere syntetiske tester omfattet ikke denne faktiske Mac-responsen.
 Regresjonsprøven med nøyaktig innsamlede byte feilet mot gammel dekoder (RED) og består etter rettingen (GREEN). Bare fullstendig nullutfylling etter riktig identitet tillates. Feil identitet, ikke-null etter utfylling og ugyldig Unicode avvises fortsatt. 300 000 lokale varierte tilfeller består.
@@ -86,5 +90,6 @@ PowerShell 5 og 7 syntakskontroll er bestått, og begge leste dagens allerede ry
 ARKIV OG START SENERE
 Privatrepo: https://github.com/SteinOA/DSSA-restorekit-macmini-m4 . Full kilde med vendor-moduler (2 133 filer), lisenser, patcher, skript, offentlige driverfiler, testresultater og B908-programmet er lagret. archives/source-snapshot.zip bevarer kildefilene byte for byte; kontrollsummer ligger ved. Firmware og lokal sertifikattillit/nøkler holdes utenfor.
 Når brukeren kommer tilbake: les dette notatet og skriv kort hvilken fersk DFU-/driverkontroll som gjenstår. Bruk det ferdige programmet og eksisterende IPSW, ikke bygg eller last ned på nytt uten ny grunn. Endelig PC-kontroll: Mac-mini-kveld/sluttstatus.json (ingen sertifikat/nøkkel/1905-pakke/egen restore/27016), Defender sanntids- og manipuleringsbeskyttelse begge på. Selve macOS-installasjonen gjenstår.
+
 
 
