@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directories:
+      - "/source"
+      - "/source/apps/desktop/src-tauri"
+      - "/source/crates/dongle-lite-boot"
+      - "/source/crates/dongle-lite-fw"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      rust-dependencies:
+        patterns: ["*"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+  - package-ecosystem: "npm"
+    directory: "/source"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      javascript-dependencies:
+        patterns: ["*"]
