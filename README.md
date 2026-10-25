@@ -43,3 +43,7 @@ The archived driver CAT contains a public signing certificate, not its private k
 ## Diskmåling og ønsket enkel brukerpakke
 
 [Én måleøkt og krav til en veiledet Windows-pakke](docs/STORAGE-TEST-AND-USER-PACKAGE.md) dokumenterer 2 TB-modulen fra Expand Mac mini, resultatene for alle tre disker og testens begrensninger. En enkel nedlastbar brukerpakke med grundig veiledning er et utviklingsmål, ikke en allerede verifisert ettklikksløsning. Andre SSD-moduler er foreløpig ikke testet.
+
+## Sikkerhet og automatiske kontroller
+
+Se [sikkerhetspolicyen](SECURITY.md) for privat rapportering og [kontrollenes omfang og begrensninger](docs/SECURITY-CHECKS.md). Faktiske resultater ligger under [GitHub Actions](https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions). En konfigurert kontroll er ikke det samme som en bestått kontroll. Avhengighetsoppdateringer foreslås i pull requests; de flettes ikke automatisk inn i dette historiske arkivet.
