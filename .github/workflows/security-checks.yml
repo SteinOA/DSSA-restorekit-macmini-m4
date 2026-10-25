@@ -24,8 +24,8 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: security-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
-  cancel-in-progress: false
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   secrets:
     name: Secrets (Git history and current files)
