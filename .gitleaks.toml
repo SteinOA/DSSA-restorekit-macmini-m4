@@ -1,0 +1,10 @@
+title = "DSSA secret scanning"
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Reviewed false positive: GnuTLS enum assignment, not a private key or API credential"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(engine|source)/crates/restorekit-sys/vendor/libimobiledevice/src/idevice\.c$''']
+regexes = ['''^\s*st->key_type = GNUTLS_PRIVKEY_X509;\s*$''']
