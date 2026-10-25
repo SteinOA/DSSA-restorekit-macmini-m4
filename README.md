@@ -2,6 +2,8 @@
 
 Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac16,10) med ny tom2TBSSD. Forsøk9 fullførte macOS15.6.1/24G90 med exit0, og brukeren har bekreftet oppstart med bilder av oppsettsassistenten.
 
+**Sikkerhetsgjennomgang gjenstår:** Skanningene fant kjente sårbarhetsvarsler i avhengigheter. Se [faktiske resultater og gjenstående arbeid](docs/SECURITY-REVIEW-2026-10-25.md) før en ny brukerpakke bygges eller deles.
+
 ## Før Mac-en åpnes: sikkerhetskopi, Aktiveringslås og sletting
 
 **Denne fremgangsmåten er beregnet på å gjenopprette macOS til en tom erstatnings-SSD. Den bevarer ikke data og er ikke et klone- eller dataredningsverktøy. En full DFU-gjenoppretting sletter alle data på SSD-en som er installert i mål-Mac-en. Hvis den gamle SSD-en er installert som mål, slettes også dataene på den. Ta og kontroller sikkerhetskopi før du slår av maskinen og bytter SSD.**
