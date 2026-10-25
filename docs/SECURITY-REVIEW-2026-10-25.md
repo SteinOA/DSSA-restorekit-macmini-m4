@@ -39,6 +39,19 @@ The first ClamAV job failed before scanning because the update daemon held its l
 
 The first full secret scan was slow on bundled regression data. A subsequent configuration bounds runtime and target size and disables archive expansion. Limits are documented in [SECURITY-CHECKS.md](SECURITY-CHECKS.md); no clean secret-scan or malware result is asserted by this initial dependency report.
 
+## Completed malware and secret checks
+
+The corrected ClamAV checks completed successfully in both repositories, with **zero infected files detected**. Scanner: ClamAV 1.5.4, signature database 28164 dated 25 October 2026. The supplier scan inspected 1,722 files in its earlier corrected run; the original archive's final corrected run inspected 2,253 files and 359.25 MiB of expanded content. These are signature-based results within documented limits, not certification.
+
+- [Supplier validated checks](https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore/actions/runs/40239605063): secret scan passed and malware scan passed; dependency audit failed with the recorded advisories.
+- [Original archive validated checks](https://github.com/SteinOA/DSSA-restorekit-macmini-m4/actions/runs/40240031985): secret scan passed and malware scan passed; JavaScript audit retained its findings. Rust findings are established by the completed earlier audit above.
+
+Gitleaks inspected history and current files. Supplier evidence records 21 commits, approximately 13.01 MB of history and 8.73 MB of current files; original archive evidence records 35 commits, approximately 119.43 MB of history and 47.55 MB of current files. Limits: 2 MiB per target, 180 seconds per invocation, no archive expansion. Large binaries, CAD models, and the original ZIP are not comprehensively covered by this secret scan.
+
+Reviewed false positives are narrowly recorded in `.gitleaks.toml`: the exact GnuTLS enum assignment in vendor `idevice.c`, and, in the original archive only, the exact historical CNG container-name assignment used by `CngKey.Exists`. That name is not private key material or a password. Two exact historical finding fingerprints for that same assignment are recorded in the original archive's `.gitleaksignore`. No broad directory exclusion or entire-commit exemption was added.
+
+No program, driver, certificate trust, account setting, or restore operation was changed by these checks. Later workflow changes cancel superseded runs to avoid redundant runner use; they do not remove dependency findings.
+
 ## Follow-up
 
 1. Keep the verified historical archive intact; do not auto-merge changes merely to make checks green.
