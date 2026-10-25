@@ -2,6 +2,18 @@
 
 Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac16,10) med ny tom2TBSSD. Forsøk9 fullførte macOS15.6.1/24G90 med exit0, og brukeren har bekreftet oppstart med bilder av oppsettsassistenten.
 
+## Før Mac-en åpnes: sikkerhetskopi, Aktiveringslås og sletting
+
+**Denne fremgangsmåten er beregnet på å gjenopprette macOS til en tom erstatnings-SSD. Den bevarer ikke data og er ikke et klone- eller dataredningsverktøy. En full DFU-gjenoppretting sletter alle data på SSD-en som er installert i mål-Mac-en. Hvis den gamle SSD-en er installert som mål, slettes også dataene på den. Ta og kontroller sikkerhetskopi før du slår av maskinen og bytter SSD.**
+
+[Leverandørens bruksanvisning](https://expandmacmini.com/pages/diy-guide) advarer om at prosedyren sletter alle data på Mac mini, og at data på den opprinnelige SSD-en vil være utilgjengelige etter byttet og fullført gjenoppretting. Ikke regn med å sette inn den gamle SSD-en igjen som sikkerhetskopi eller for å finne Apple-kontoen etterpå.
+
+Før maskinen åpnes, ber leverandøren eieren kontrollere den nøyaktige e-postadressen til Apple-kontoen og logge ut i Systeminnstillinger. Kontroller selv at du kan logge inn på kontoen. Ikke del passord med leverandøren, i repoet eller i chatten.
+
+[Apple forklarer Aktiveringslås og hvordan den slås av](https://support.apple.com/en-ie/102541): Slå av Finn Mac under Systeminnstillinger → navnet ditt → iCloud → Se alle → Finn Mac, og godkjenn selv når du blir bedt om det. Aktiveringslås er noe annet enn FileVault-diskkryptering. Den lenkede leverandørveiledningen sier ikke at FileVault må slås av. SSD-bytte og dette programmet kan ikke omgå Aktiveringslås.
+
+Gjør disse kontrollene før avslåing og demontering. Denne dokumentasjonsendringen endrer ingen konto-, krypterings- eller sikkerhetsinnstillinger.
+
 Se [resultatet](docs/FORSOK9-RESULTAT.txt) og [kontrollpunktene](results/attempt9-restore-result.json). Den konkrete native Windows-portfeilen er rettet og testet før det vellykkede forsøket; [rettelsen er dokumentert her](docs/NATIVE-PORT-RETTELSE.txt).
 
 PC-oppryddingen er fullført: midlertidig driverpakke, sertifikattillit og privat nøkkel er borte. Apples drivere og tjeneste er beholdt. Windows-beskyttelsen er på. [Fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt) har eksakt status. Ingen ny restore skal startes.
