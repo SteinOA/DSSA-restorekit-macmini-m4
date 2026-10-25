@@ -50,7 +50,7 @@ jobs:
           set -e
           echo "History exit=$history_status; files exit=$files_status (0=clean, 1=findings; other=scan error)" >> "$GITHUB_STEP_SUMMARY"
           test "$history_status" -eq 0 && test "$files_status" -eq 0
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: secret-scan-redacted
@@ -90,7 +90,7 @@ jobs:
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
               f.write(text)
           sys.exit(1 if failed else 0)
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: rust-advisory-results
@@ -122,7 +122,7 @@ jobs:
           cat "$RUNNER_TEMP/malware-results/clamav.txt" >> "$GITHUB_STEP_SUMMARY"
           echo "ClamAV exit=$scan_status (0=no detection, 1=detection, 2=error). Signature-based scan, not a security certification." >> "$GITHUB_STEP_SUMMARY"
           exit "$scan_status"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: malware-scan-results
@@ -148,7 +148,7 @@ jobs:
           set -e
           echo "pnpm audit exit=$audit_status; see private report artifact. No project dependency or lifecycle script was installed or executed." >> "$GITHUB_STEP_SUMMARY"
           exit "$audit_status"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: javascript-advisory-results
