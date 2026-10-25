@@ -1,0 +1,4 @@
+# Reviewed non-secret CNG container name at two exact historical findings.
+# Current-file handling remains constrained by path and exact line in .gitleaks.toml.
+eb971be5c11457e83cb29b132b1d260eb461dd52:history/scripts/mac1905-temporary-common.ps1.txt:generic-api-key:5
+eb971be5c11457e83cb29b132b1d260eb461dd52:ops/mac1905-temporary-common.ps1:generic-api-key:5
