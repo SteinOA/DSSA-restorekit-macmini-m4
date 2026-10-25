@@ -22,7 +22,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: security-${{ github.workflow }}-${{ github.ref }}
+  group: security-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 jobs:
   secrets:
@@ -43,9 +43,9 @@ jobs:
           scanner="$(go env GOPATH)/bin/gitleaks"
           "$scanner" version
           set +e
-          "$scanner" git . --redact=100 --log-opts="--all" --report-format=json --report-path="$RUNNER_TEMP/security-results/secrets-history.json"
+          "$scanner" git . --timeout=180 --max-target-megabytes=2 --redact=100 --log-opts="--all" --report-format=json --report-path="$RUNNER_TEMP/security-results/secrets-history.json"
           history_status=$?
-          "$scanner" dir . --redact=100 --max-archive-depth=2 --report-format=json --report-path="$RUNNER_TEMP/security-results/secrets-files.json"
+          "$scanner" dir . --timeout=180 --max-target-megabytes=2 --redact=100 --max-archive-depth=0 --report-format=json --report-path="$RUNNER_TEMP/security-results/secrets-files.json"
           files_status=$?
           set -e
           echo "History exit=$history_status; files exit=$files_status (0=clean, 1=findings; other=scan error)" >> "$GITHUB_STEP_SUMMARY"
