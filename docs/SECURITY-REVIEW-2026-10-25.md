@@ -58,6 +58,10 @@ No program, driver, certificate trust, account setting, or restore operation was
 2. Review advisory applicability, enabled features, native C library versions, and all maintenance/soundness warnings.
 3. Upgrade affected dependencies in maintained evaluation source, rebuild, and run relevant regression and integration tests. Any hardware-validation claim needs a separate physical pilot.
 4. Review actual replacement malware/secret-scan results, and repeat checks on the exact binary intended for download, recording SHA-256 and scanner/database versions.
-5. Confirm GitHub repository-level dependency alerts separately from the committed Dependabot version-update configuration.
+5. Review and triage the repository-level Dependabot and malware alerts now enabled; update proposals still require review and are not automatically merged.
 
 This is an engineering review record, not release approval.
+
+## Repository-level settings verified in Safari
+
+After the owner completed GitHub authentication, the following settings were enabled and verified after reloading/navigating back to each repository's Advanced Security page: Dependency graph, Dependabot alerts, Malware alerts, and Dependabot security updates. All four were on in both repositories. Grouped security updates remains off because update grouping is already described in dependabot.yml. These settings propose updates and report findings; they do not automatically merge changes or resolve the recorded advisories. No paid Code Security/Secret Protection product was enabled and repository visibility was not changed.
