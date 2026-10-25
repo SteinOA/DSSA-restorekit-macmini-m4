@@ -17,6 +17,7 @@ on:
       - '.github/**'
       - 'SECURITY.md'
       - '.gitleaks.toml'
+      - '.gitleaksignore'
   pull_request:
   schedule:
     - cron: '23 7 * * 1'
