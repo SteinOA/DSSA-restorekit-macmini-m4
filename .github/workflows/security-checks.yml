@@ -23,7 +23,7 @@ permissions:
   contents: read
 concurrency:
   group: security-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   secrets:
     name: Secrets (Git history and current files)
@@ -108,6 +108,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends clamav
+          sudo systemctl stop clamav-freshclam
           sudo freshclam
           clamscan --version
       - name: Scan checkout and archives without executing programs
