@@ -1,0 +1,156 @@
+name: Security checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '**/Cargo.lock'
+      - '**/Cargo.toml'
+      - '**/package.json'
+      - '**/pnpm-lock.yaml'
+      - '**/*.rs'
+      - '**/*.c'
+      - '**/*.h'
+      - '**/*.ps1'
+      - '**/*.exe'
+      - '**/*.zip'
+      - '.github/**'
+      - 'SECURITY.md'
+  pull_request:
+  schedule:
+    - cron: '23 7 * * 1'
+permissions:
+  contents: read
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  secrets:
+    name: Secrets (Git history and current files)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned Gitleaks
+        run: go install github.com/zricethezav/gitleaks/v8@v8.30.1
+      - name: Scan without exposing matched secrets
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/security-results"
+          scanner="$(go env GOPATH)/bin/gitleaks"
+          "$scanner" version
+          set +e
+          "$scanner" git . --redact=100 --log-opts="--all" --report-format=json --report-path="$RUNNER_TEMP/security-results/secrets-history.json"
+          history_status=$?
+          "$scanner" dir . --redact=100 --max-archive-depth=2 --report-format=json --report-path="$RUNNER_TEMP/security-results/secrets-files.json"
+          files_status=$?
+          set -e
+          echo "History exit=$history_status; files exit=$files_status (0=clean, 1=findings; other=scan error)" >> "$GITHUB_STEP_SUMMARY"
+          test "$history_status" -eq 0 && test "$files_status" -eq 0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: secret-scan-redacted
+          path: ${{ runner.temp }}/security-results/
+          retention-days: 14
+  rust:
+    name: Rust dependency advisories
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned RustSec audit tool
+        run: cargo install cargo-audit --version 0.22.2 --locked
+      - name: Audit every tracked Rust lockfile without executing project code
+        shell: python
+        run: |
+          import os, pathlib, subprocess, sys
+          root = pathlib.Path.cwd()
+          out = pathlib.Path(os.environ["RUNNER_TEMP"]) / "rust-audit-results"
+          out.mkdir()
+          files = subprocess.check_output(["git", "ls-files", "-z"], text=True).split("\0")
+          locks = [f for f in files if f.endswith("Cargo.lock")]
+          if not locks:
+              sys.exit("No Cargo.lock files found; scan cannot pass")
+          failed = False
+          summary = []
+          for i, lock in enumerate(locks):
+              result = subprocess.run(["cargo", "audit", "--file", str(root / lock), "--json"], cwd=out, text=True, capture_output=True)
+              (out / f"{i}.json").write_text(result.stdout)
+              (out / f"{i}.stderr.txt").write_text(result.stderr)
+              summary.append(f"- {lock}: exit {result.returncode}")
+              failed |= result.returncode != 0
+          text = "## RustSec lockfile audit\n\n" + "\n".join(summary) + "\n\nExit 0 means no known vulnerability detected by this audit; other exits require report review. Vendored C libraries are outside this scan.\n"
+          (out / "summary.md").write_text(text)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(text)
+          sys.exit(1 if failed else 0)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: rust-advisory-results
+          path: ${{ runner.temp }}/rust-audit-results/
+          retention-days: 14
+  malware:
+    name: ClamAV file scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install scanner and update signatures
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends clamav
+          sudo freshclam
+          clamscan --version
+      - name: Scan checkout and archives without executing programs
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/malware-results"
+          clamscan --version | tee "$RUNNER_TEMP/malware-results/version.txt"
+          set +e
+          clamscan --recursive --infected --scan-archive=yes --max-filesize=256M --max-scansize=512M --exclude-dir='(^|/)\.git(/|$)' --log="$RUNNER_TEMP/malware-results/clamav.txt" .
+          scan_status=$?
+          set -e
+          cat "$RUNNER_TEMP/malware-results/clamav.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo "ClamAV exit=$scan_status (0=no detection, 1=detection, 2=error). Signature-based scan, not a security certification." >> "$GITHUB_STEP_SUMMARY"
+          exit "$scan_status"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: malware-scan-results
+          path: ${{ runner.temp }}/malware-results/
+          retention-days: 14
+  javascript:
+    name: JavaScript dependency advisories (archive)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned pnpm without project scripts
+        run: npm install --global pnpm@10.28.0 --ignore-scripts
+      - name: Audit archived workspace lockfile without installing dependencies
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/javascript-audit-results"
+          set +e
+          pnpm --dir source audit --json > "$RUNNER_TEMP/javascript-audit-results/pnpm-audit.json" 2> "$RUNNER_TEMP/javascript-audit-results/pnpm-audit.stderr.txt"
+          audit_status=$?
+          set -e
+          echo "pnpm audit exit=$audit_status; see private report artifact. No project dependency or lifecycle script was installed or executed." >> "$GITHUB_STEP_SUMMARY"
+          exit "$audit_status"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: javascript-advisory-results
+          path: ${{ runner.temp }}/javascript-audit-results/
+          retention-days: 14
