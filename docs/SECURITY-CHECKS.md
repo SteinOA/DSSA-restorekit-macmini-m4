@@ -6,7 +6,7 @@ The root `.github/workflows/security-checks.yml` configures read-only scans on r
 
 | Check | Scope | Important limit |
 | --- | --- | --- |
-| Gitleaks 8.30.1 | Fetched Git history and current checkout, with archive inspection to depth 2; matched secrets are redacted | Pattern detection is incomplete; a clean result does not prove absence of credentials. |
+| Gitleaks 8.30.1 | Fetched Git history and current checkout, with 180-second limits per scan and a 2 MiB target limit; matched secrets are redacted | Archive expansion is disabled for secret scanning to avoid pathological vendor regression archives. Large targets are skipped. Pattern detection is incomplete; a clean result does not prove absence of credentials. |
 | cargo-audit 0.22.2 / RustSec | Every tracked Cargo.lock, inspected from outside the project directory without executing project build scripts | Does not audit vendored C libraries or prove exploitability; warnings and reports require review. |
 | ClamAV | Current checkout and archive contents, with refreshed signatures | Signature-based detection; not a malware-free certification. File limit 256 MiB, cumulative archive scan limit 512 MiB; exclusions and errors must be reviewed. |
 | pnpm audit (original archive only) | Archived JavaScript workspace lockfile, including development tools | Advisory matches do not prove the Windows executable contains or reaches the vulnerable code. Uses the npm audit service for dependency metadata, not source-code upload. |
@@ -22,7 +22,7 @@ Dependabot version-update configuration is distinct from GitHub's repository-lev
 
 ## Remaining review
 
-Vendored native C dependency versions and advisories, application logic, Windows driver handling, code signing, and release-binary reproducibility still require their own review. A dependency audit or antivirus pass does not certify any of these. The original archived ZIP is inspected for secrets and malware within scanner limits, but its embedded lockfiles are not independently enumerated for dependency auditing.
+Vendored native C dependency versions and advisories, application logic, Windows driver handling, code signing, and release-binary reproducibility still require their own review. A dependency audit or antivirus pass does not certify any of these. The original archived ZIP is inspected for malware within scanner limits. It is not expanded by the bounded secret scan, and its embedded lockfiles are not independently enumerated for dependency auditing.
 
 For a downloadable release, retain the exact commit, executable SHA-256, scanner/database versions, result links and unresolved findings. Re-run release checks when binaries change. Do not advertise a release as safe solely because a dashboard is green.
 
