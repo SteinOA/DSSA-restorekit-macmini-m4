@@ -8,3 +8,10 @@ condition = "AND"
 regexTarget = "line"
 paths = ['''^(engine|source)/crates/restorekit-sys/vendor/libimobiledevice/src/idevice\.c$''']
 regexes = ['''^\s*st->key_type = GNUTLS_PRIVKEY_X509;\s*$''']
+
+[[allowlists]]
+description = "Reviewed false positive: exact historical Windows CNG key-container name used only for Exists lookup; not private key material or a password"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^ops/mac1905-temporary-common\.ps1$''', '''^history/scripts/mac1905-temporary-common\.ps1\.txt$''']
+regexes = ['''^\$script:TaskKey='te-6087c5f9-045d-456f-935e-20cc89e024a0'\s*$''']
