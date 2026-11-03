@@ -1,5 +1,7 @@
 # DSSA – Mac mini M4 restore fra Windows
 
+**Gjenopprett en Mac fra en Windows-PC:** Vi har gjennomført en full gjenoppretting av macOS på Mac mini M4 (2024, Mac16,10) med ny, tom 2 TB SSD fra en Windows x64-PC, uten en ekstra Mac. Mac-en startet deretter i macOS-oppsettsassistenten. Dette er dokumentert for én konkret maskin med den opprinnelige, personlåste programversjonen. Andre Mac-modeller er ikke verifisert av DSSA. Dette historiske arkivet inneholder enhetsspesifikke opplysninger og skal fortsatt behandles som privat.
+
 Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac16,10) med ny tom2TBSSD. Forsøk9 fullførte macOS15.6.1/24G90 med exit0, og brukeren har bekreftet oppstart med bilder av oppsettsassistenten.
 
 **Sikkerhetsgjennomgang gjenstår:** Skanningene fant kjente sårbarhetsvarsler i avhengigheter. Se [faktiske resultater og gjenstående arbeid](docs/SECURITY-REVIEW-2026-10-25.md) før en ny brukerpakke bygges eller deles.
