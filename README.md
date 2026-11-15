@@ -8,6 +8,12 @@ Resultatet gjelder den konkrete maskinen og programversjonen som ble brukt. Den 
 
 **Sikkerhetsgjennomgang gjenstår:** Skanningene fant kjente sårbarhetsvarsler i avhengigheter. Se [faktiske resultater og gjenstående arbeid](docs/SECURITY-REVIEW-2026-10-25.md) før en ny brukerpakke bygges eller deles.
 
+## Slik ble det gjort
+
+Se [den tekniske fremgangsmåten](docs/FREMGANGSMATE.md) for forberedelser, bygging, maskintilpasning, driveroppsett, DFU, overvåket gjenoppretting og opprydding.
+
+For videre arbeid på en utgave som velger målmaskin per kjøring, se også [DSSA-Mac-mini-M4-Restore](https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore). Det repoet inneholder den generaliserte utviklingsutgaven; dette arkivet dokumenterer det fysisk vellykkede forsøket.
+
 ## Før Mac-en åpnes: sikkerhetskopi, Aktiveringslås og sletting
 
 **Denne fremgangsmåten er beregnet på å gjenopprette macOS til en tom erstatnings-SSD. Den bevarer ikke data og er ikke et klone- eller dataredningsverktøy. En full DFU-gjenoppretting sletter alle data på SSD-en som er installert i mål-Mac-en. Hvis den gamle SSD-en er installert som mål, slettes også dataene på den. Ta og kontroller sikkerhetskopi før du slår av maskinen og bytter SSD.**
