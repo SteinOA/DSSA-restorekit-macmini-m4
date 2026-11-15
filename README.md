@@ -1,8 +1,10 @@
-# DSSA – Mac mini M4 restore fra Windows
+# DSSA – Mac mini M4 gjenopprettet fra Windows
 
-**Gjenopprett en Mac fra en Windows-PC:** Vi har gjennomført en full gjenoppretting av macOS på Mac mini M4 (2024, Mac16,10) med ny, tom 2 TB SSD fra en Windows x64-PC, uten en ekstra Mac. Mac-en startet deretter i macOS-oppsettsassistenten. Dette er dokumentert for én konkret maskin med den opprinnelige, personlåste programversjonen. Andre Mac-modeller er ikke verifisert av DSSA. Dette historiske arkivet inneholder enhetsspesifikke opplysninger og skal fortsatt behandles som privat.
+**Vellykket gjenoppretting uten en ekstra Mac.** Dette repoet dokumenterer hvordan en Mac mini M4 (2024, Mac16,10) med en ny, tom 2 TB SSD ble gjenopprettet fra en Windows x64-PC. Mac-en startet deretter i macOS-oppsettsassistenten, og oppstarten ble bekreftet med bilder.
 
-Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac16,10) med ny tom2TBSSD. Forsøk9 fullførte macOS15.6.1/24G90 med exit0, og brukeren har bekreftet oppstart med bilder av oppsettsassistenten.
+Forsøk 9 fullførte gjenopprettingen av macOS 15.6.1 (24G90) med avslutningskode 0. Her er kildekoden, de lokale rettelsene og resultatene fra arbeidet samlet.
+
+Resultatet gjelder den konkrete maskinen og programversjonen som ble brukt. Den arkiverte programversjonen er låst til denne enhetens identitet; andre Mac-maskiner er ikke verifisert av DSSA. Arkivet inneholder enhetsspesifikke opplysninger fra forsøket.
 
 **Sikkerhetsgjennomgang gjenstår:** Skanningene fant kjente sårbarhetsvarsler i avhengigheter. Se [faktiske resultater og gjenstående arbeid](docs/SECURITY-REVIEW-2026-10-25.md) før en ny brukerpakke bygges eller deles.
 
@@ -12,37 +14,38 @@ Privat arkiv for en **vellykket gjenoppretting fra Windows** av Mac mini M4 (Mac
 
 [Leverandørens bruksanvisning](https://expandmacmini.com/pages/diy-guide) advarer om at prosedyren sletter alle data på Mac mini, og at data på den opprinnelige SSD-en vil være utilgjengelige etter byttet og fullført gjenoppretting. Ikke regn med å sette inn den gamle SSD-en igjen som sikkerhetskopi eller for å finne Apple-kontoen etterpå.
 
-Før maskinen åpnes, ber leverandøren eieren kontrollere den nøyaktige e-postadressen til Apple-kontoen og logge ut i Systeminnstillinger. Kontroller selv at du kan logge inn på kontoen. Ikke del passord med leverandøren, i repoet eller i chatten.
+Før maskinen åpnes, ber leverandøren eieren kontrollere den nøyaktige e-postadressen til Apple-kontoen og logge ut i Systeminnstillinger. Kontroller selv at du kan logge inn på kontoen. Ikke del passord eller legg dem i repoet.
 
 [Apple forklarer Aktiveringslås og hvordan den slås av](https://support.apple.com/en-ie/102541): Slå av Finn Mac under Systeminnstillinger → navnet ditt → iCloud → Se alle → Finn Mac, og godkjenn selv når du blir bedt om det. Aktiveringslås er noe annet enn FileVault-diskkryptering. Den lenkede leverandørveiledningen sier ikke at FileVault må slås av. SSD-bytte og dette programmet kan ikke omgå Aktiveringslås.
 
-Gjør disse kontrollene før avslåing og demontering. Denne dokumentasjonsendringen endrer ingen konto-, krypterings- eller sikkerhetsinnstillinger.
+Gjør disse kontrollene før avslåing og demontering.
 
 Se [resultatet](docs/FORSOK9-RESULTAT.txt) og [kontrollpunktene](results/attempt9-restore-result.json). Den konkrete native Windows-portfeilen er rettet og testet før det vellykkede forsøket; [rettelsen er dokumentert her](docs/NATIVE-PORT-RETTELSE.txt).
 
-PC-oppryddingen er fullført: midlertidig driverpakke, sertifikattillit og privat nøkkel er borte. Apples drivere og tjeneste er beholdt. Windows-beskyttelsen er på. [Fortsettelsesnotatet](docs/FORTSETT-HER-I-KVELD.txt) har eksakt status. Ingen ny restore skal startes.
+Etter det vellykkede forsøket ble den midlertidige driverpakken, sertifikattilliten og den private nøkkelen fjernet. Apples drivere og tjeneste ble beholdt, og Windows-beskyttelsen var på. Detaljene er bevart i [arbeidsnotatet fra forsøket](docs/FORTSETT-HER-I-KVELD.txt).
+
+## Innhold i repoet
+
 - `source/`: komplett kildekode fra RestoreKit v0.5.13 med lokale rettelser og innholdet i alle vendor-moduler.
 - `archives/source-snapshot.zip`: samme 2 133 kildefiler med nøyaktige opprinnelige byte. Bruk dette arkivet når kontrollsummene i `source-manifest.json` skal sammenlignes; enkelte vendor-moduler har egne Git-regler for linjeskift.
 - `patches/`, `provenance.json`, `source-manifest.json`: opprinnelse, endringer, lisenser og kontrollsummer.
 - `bin/windows-x64/restorekit.exe`: ferdig Windows-program, SHA256 `B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93`.
-- `ops/`: klargjorte skript for ett overvåket forsøk og etterfølgende opprydding. De forutsetter den eksisterende lokale arbeidsmappens oppsett; ikke kjør dem direkte fra et nytt Git-klone uten å lese notatet.
+- `ops/`: klargjorte skript for ett overvåket forsøk og etterfølgende opprydding. De er tilpasset det opprinnelige lokale oppsettet og er ikke generelle installasjonsskript for en ny kloning av repoet.
 - `driver/pid1905/`: kun den avgrensede INF/CAT-pakken for siste restore-modus. CAT inneholder det eksisterende offentlige signeringssertifikatet. Ingen privat signeringsnøkkel er bevart eller lastet opp. Historisk signaturkontroll betyr ikke at sertifikatet nå er betrodd på PC-en.
 - `results/`: programtesten, oppryddingsbevis og faktiske GitHub Actions-resultater.
 - `history/`: eldre skript som dokumentasjon, lagret som tekst; de skal ikke kjøres.
 
-Etter forsøk 6 ble oppdragets sertifikat, private nøkkel og nye driverpakke bekreftet borte. Windows-beskyttelsen er på. Senere midlertidig tillit/driverklargjøring må følge den avtalte godkjenningen og ryddes bort etter forsøket, også ved feil. Ikke bruk den opprinnelige brede `setup-driver`-kommandoen.
+Midlertidige drivere og sertifikattillit krever opprydding etter bruk, også ved feil. Ikke bruk den opprinnelige brede `setup-driver`-kommandoen.
 
-Firmwarefilen er allerede bevart lokalt. IPSW, lokale sertifikatlagre, private nøkler, innloggingsopplysninger og rå PC-inventarer lastes ikke opp. Dette repoet starter ingen installasjon automatisk.
+Firmware (IPSW), private nøkler, innloggingsopplysninger og lokale sertifikatlagre inngår ikke i distribusjonen.
 
-## What cloud tests establish
+## Hva de automatiske testene viser
 
-The exact production identity parser and existing regression fixtures are tested on Ubuntu 24.04 (GCC and Clang, AddressSanitizer/UndefinedBehaviorSanitizer) and Windows Server 2022 (MSVC). Three independent replicas use distinct deterministic seeds, each testing 100,000 bounded malformed-input cases against an independent identity oracle and output-buffer canaries.
+Identitetsparseren og regresjonstestene er testet på Ubuntu 24.04 med GCC og Clang, inkludert AddressSanitizer og UndefinedBehaviorSanitizer, og på Windows Server 2022 med MSVC. Tre separate testkjøringer bruker ulike deterministiske startverdier og tester 100 000 tilfeller med ugyldige inndata hver.
 
-These are pure-data software tests. They access no USB devices, drivers, certificate stores, firmware or Mac hardware. Passing tests does **not** establish that a physical Mac restoration succeeds, that a Windows driver works, or that macOS boots. No physical restore is scheduled by this repository.
+Dette er programvaretester uten tilgang til USB-enheter, drivere, sertifikatlagre, firmware eller Mac-maskinvare. De kontrollerer parserens oppførsel og minnehåndtering. Den fysiske gjenopprettingen er dokumentert separat i resultatene fra forsøk 9.
 
-`source-provenance.json` records SHA-256 hashes of the copied production header and original fixtures. Cloud workflow access is read-only (`contents: read`), with a ten-minute limit per job and no repository secrets.
-
-The archived driver CAT contains a public signing certificate, not its private key or any Windows trust store. Do not commit firmware IPSWs, private keys, credentials, local trust-store exports or raw PC inventories. Public release/publication is not authorized.
+`source-provenance.json` inneholder SHA-256-kontrollsummer for den kopierte produksjonsheaderen og de opprinnelige testdataene. Testarbeidsflytene har lesetilgang (`contents: read`), en grense på ti minutter per jobb og bruker ingen repository secrets.
 
 ## Diskmåling og ønsket enkel brukerpakke
 
