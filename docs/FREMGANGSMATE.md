@@ -4,6 +4,14 @@ Denne veiledningen beskriver fremgangsmåten som ga en vellykket gjenoppretting 
 
 **Full Restore sletter innholdet på målmaskinens installerte SSD.** Dette er en teknisk veiledning basert på ett dokumentert oppsett. Den medfølgende EXE-filen og skriptene er maskinspesifikke; en annen Mac krever tilpasning og ny bygging.
 
+## Velg riktig kodegrunnlag
+
+[DSSA-Mac-mini-M4-Restore](https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore) inneholder allerede en generalisert utviklingsutgave. For et nytt teknisk forsøk er den et mer naturlig utgangspunkt enn å endre alle personverdiene i dette historiske arkivet. Les [startveiledningen](https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore/blob/main/docs/START-HERE.md) og [byggeveiledningen](https://github.com/SteinOA/DSSA-Mac-mini-M4-Restore/blob/main/docs/BUILD.md) der.
+
+Den generaliserte Windows-utgaven krever både initial kontroller-ECID (`--ecid`) og tilhørende SoC-ECID (`--target-soc-ecid`), samt lokal `--ipsw`. Disse to identitetene er forskjellige og må verifiseres som tilhørende samme Mac. Automatisk innhenting av dette paret og en ferdig driverinstallasjon/opprydding er ikke implementert. Utgaven er ikke fysisk validert på en ny Mac.
+
+Trinnene nedenfor forklarer det vellykkede originalforsøket. Filstiene og kommandoformen gjelder dette arkivet; bruk byggeveiledning og CLI-hjelp fra den generaliserte utgaven hvis du velger den.
+
 ## 1. Før SSD-bytte: sikkerhetskopi og Apple-konto
 
 Ta en sikkerhetskopi som du har kontrollert at du kan lese. Kontroller at du kjenner Apple-kontoen og kan logge inn. Slå av Finn Mac før demontering når du har tilgang til macOS: Systeminnstillinger → navnet ditt → iCloud → Se alle → Finn Mac.
