@@ -1,6 +1,6 @@
 # Build the preserved Windows main program
 
-This export belongs in the private repository `SteinOA/DSSA-restorekit-macmini-m4`.
+This repository preserves the original device-specific Windows restore work.
 It preserves upstream RestoreKit v0.5.13, commit
 `3cf86558a2f721ff956c99eebc132a022291ddb5`, and the full working source of every
 vendored submodule. Read `provenance.json` for the original URLs and pinned commits.
@@ -9,11 +9,15 @@ by fresh upstream checkouts or run `git submodule update` over them.
 For a byte-exact copy, extract `archives/source-snapshot.zip` and verify
 `source-manifest.json`; vendor Git attributes can otherwise change line endings.
 
-The existing `bin/windows-x64/restorekit.exe` is the single tested main build,
-SHA256 `48C91C3FC776205808BD69919AC83590274C4422AB9E40E356036B57FF30313D`.
-The main executable builds successfully; completing the Mac restore is still
-unverified. Building or inspecting this repository does not authorize a restore,
-driver installation, certificate import, signing, or security-setting change.
+The successful attempt 9 used the archived Windows executable with recorded
+SHA256 `B59206BC8E7046FF696A87DF029BD919BCD6659E06E82D11DD940F67126D2F93`.
+A complete restore and subsequent macOS Setup Assistant boot were documented on
+one Mac mini M4 with an empty 2 TB replacement module. This does not establish
+that a fresh build or another target has been physically validated.
+
+See [the technical procedure](docs/FREMGANGSMATE.md) for the complete sequence,
+machine-specific settings and the separate generalized development repository.
+Earlier build identifiers in historical notes refer to earlier development builds.
 
 ## Prerequisites
 
